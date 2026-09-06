@@ -1,688 +1,1642 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- Admitad verification -->
-    <meta name="mitgo-verification" content="fd5598e6-7b24-448a-bbfb-e235d641b29c">
-
-    <title>DealBot — Discover Better Deals</title>
-    <meta name="description" content="DealBot helps you discover great deals, discounts and offers from around the web.">
-
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-            background: #f6f7fb;
-            color: #111827;
-            line-height: 1.6;
-        }
-
-        a {
-            text-decoration: none;
-            color: inherit;
-        }
-
-        .container {
-            width: min(1120px, 92%);
-            margin: auto;
-        }
-
-        /* NAVBAR */
-
-        nav {
-            background: rgba(255,255,255,0.95);
-            border-bottom: 1px solid #e5e7eb;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            backdrop-filter: blur(10px);
-        }
-
-        .nav-inner {
-            height: 72px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .logo {
-            font-size: 25px;
-            font-weight: 800;
-            letter-spacing: -1px;
-        }
-
-        .logo span {
-            color: #635bff;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 28px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #4b5563;
-        }
-
-        .nav-links a:hover {
-            color: #635bff;
-        }
-
-        .nav-button {
-            background: #111827;
-            color: white;
-            padding: 11px 18px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 700;
-        }
-
-        /* HERO */
-
-        .hero {
-            padding: 90px 0 70px;
-            background:
-                radial-gradient(circle at 10% 10%, rgba(99,91,255,.15), transparent 30%),
-                radial-gradient(circle at 90% 20%, rgba(236,72,153,.12), transparent 30%);
-        }
-
-        .hero-content {
-            text-align: center;
-            max-width: 800px;
-            margin: auto;
-        }
-
-        .badge {
-            display: inline-block;
-            background: #eeecff;
-            color: #554de0;
-            padding: 7px 13px;
-            border-radius: 999px;
-            font-size: 13px;
-            font-weight: 700;
-            margin-bottom: 22px;
-        }
-
-        h1 {
-            font-size: clamp(42px, 7vw, 76px);
-            line-height: 1.02;
-            letter-spacing: -4px;
-            margin-bottom: 24px;
-        }
-
-        .gradient {
-            background: linear-gradient(90deg, #635bff, #ec4899);
-            -webkit-background-clip: text;
-            color: transparent;
-        }
-
-        .hero p {
-            font-size: 19px;
-            color: #6b7280;
-            max-width: 650px;
-            margin: auto;
-        }
-
-        .search {
-            margin: 35px auto 0;
-            display: flex;
-            max-width: 650px;
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 14px;
-            padding: 7px;
-            box-shadow: 0 15px 40px rgba(0,0,0,.08);
-        }
-
-        .search input {
-            flex: 1;
-            border: 0;
-            outline: none;
-            padding: 14px;
-            font-size: 15px;
-            background: transparent;
-        }
-
-        .search button {
-            border: 0;
-            background: #635bff;
-            color: white;
-            padding: 0 24px;
-            border-radius: 9px;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        /* CATEGORIES */
-
-        .section {
-            padding: 75px 0;
-        }
-
-        .section-title {
-            text-align: center;
-            margin-bottom: 35px;
-        }
-
-        .section-title h2 {
-            font-size: 34px;
-            letter-spacing: -1px;
-        }
-
-        .section-title p {
-            color: #6b7280;
-            margin-top: 8px;
-        }
-
-        .categories {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 14px;
-        }
-
-        .category {
-            background: white;
-            border: 1px solid #e5e7eb;
-            padding: 20px 10px;
-            text-align: center;
-            border-radius: 14px;
-            font-weight: 700;
-            font-size: 14px;
-            transition: .2s;
-        }
-
-        .category:hover {
-            transform: translateY(-3px);
-            border-color: #635bff;
-        }
-
-        .category-icon {
-            font-size: 27px;
-            display: block;
-            margin-bottom: 7px;
-        }
-
-        /* DEALS */
-
-        .deals {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 22px;
-        }
-
-        .deal {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 18px;
-            overflow: hidden;
-            transition: .25s;
-        }
-
-        .deal:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0,0,0,.08);
-        }
-
-        .deal-image {
-            height: 190px;
-            background: linear-gradient(135deg, #eef0ff, #f7eafa);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 60px;
-        }
-
-        .deal-content {
-            padding: 20px;
-        }
-
-        .discount {
-            display: inline-block;
-            background: #dcfce7;
-            color: #15803d;
-            padding: 4px 9px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 800;
-            margin-bottom: 10px;
-        }
-
-        .deal h3 {
-            font-size: 18px;
-            margin-bottom: 8px;
-        }
-
-        .deal p {
-            color: #6b7280;
-            font-size: 14px;
-            margin-bottom: 17px;
-        }
-
-        .price {
-            font-size: 22px;
-            font-weight: 800;
-        }
-
-        .old-price {
-            color: #9ca3af;
-            text-decoration: line-through;
-            font-size: 14px;
-            margin-left: 6px;
-        }
-
-        .deal-button {
-            display: block;
-            margin-top: 18px;
-            background: #111827;
-            color: white;
-            text-align: center;
-            padding: 11px;
-            border-radius: 9px;
-            font-weight: 700;
-            font-size: 14px;
-        }
-
-        /* HOW IT WORKS */
-
-        .steps {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 25px;
-        }
-
-        .step {
-            text-align: center;
-            background: white;
-            border: 1px solid #e5e7eb;
-            padding: 30px;
-            border-radius: 18px;
-        }
-
-        .step-number {
-            width: 45px;
-            height: 45px;
-            margin: 0 auto 17px;
-            border-radius: 50%;
-            background: #eeecff;
-            color: #635bff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-        }
-
-        .step h3 {
-            margin-bottom: 8px;
-        }
-
-        .step p {
-            color: #6b7280;
-            font-size: 14px;
-        }
-
-        /* CTA */
-
-        .cta {
-            background: #111827;
-            color: white;
-            border-radius: 25px;
-            padding: 60px 30px;
-            text-align: center;
-        }
-
-        .cta h2 {
-            font-size: 38px;
-            letter-spacing: -1px;
-            margin-bottom: 12px;
-        }
-
-        .cta p {
-            color: #cbd5e1;
-            margin-bottom: 25px;
-        }
-
-        .cta-button {
-            display: inline-block;
-            background: white;
-            color: #111827;
-            padding: 13px 22px;
-            border-radius: 10px;
-            font-weight: 800;
-        }
-
-        /* FOOTER */
-
-        footer {
-            margin-top: 70px;
-            border-top: 1px solid #e5e7eb;
-            padding: 35px 0;
-            background: white;
-        }
-
-        .footer-inner {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        footer p {
-            color: #6b7280;
-            font-size: 13px;
-        }
-
-        /* MOBILE */
-
-        @media (max-width: 800px) {
-
-            .nav-links {
-                display: none;
-            }
-
-            .nav-button {
-                display: none;
-            }
-
-            h1 {
-                letter-spacing: -2px;
-            }
-
-            .categories {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .deals {
-                grid-template-columns: 1fr;
-            }
-
-            .steps {
-                grid-template-columns: 1fr;
-            }
-
-            .search {
-                flex-direction: column;
-                gap: 7px;
-            }
-
-            .search button {
-                padding: 13px;
-            }
-
-            .footer-inner {
-                flex-direction: column;
-                gap: 10px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+
+  <!-- Admitad verification — DO NOT REMOVE -->
+  <meta name="mitgo-verification" content="fd5598e6-7b24-448a-bbfb-e235d641b29c">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="DealBot — Find, compare and track better deals.">
+  <title>DealBot — Deal Discovery Platform</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #ffffff;
+      color: #111111;
+      line-height: 1.5;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .container {
+      width: min(1180px, 92%);
+      margin: auto;
+    }
+
+    /* HEADER */
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(255,255,255,.96);
+      border-bottom: 1px solid #e8e8e8;
+      backdrop-filter: blur(10px);
+    }
+
+    .nav {
+      min-height: 74px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 25px;
+    }
+
+    .logo {
+      font-size: 25px;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 26px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .nav-links a:hover {
+      color: #111;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .language-switcher {
+      display: flex;
+      align-items: center;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .language-switcher button {
+      border: 0;
+      background: transparent;
+      padding: 8px 10px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      color: #777;
+    }
+
+    .language-switcher button.active {
+      background: #111;
+      color: #fff;
+    }
+
+    .btn {
+      border: 1px solid #111;
+      background: #111;
+      color: white;
+      padding: 11px 17px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: .2s;
+    }
+
+    .btn:hover {
+      opacity: .86;
+    }
+
+    .btn.secondary {
+      background: white;
+      color: #111;
+      border-color: #ddd;
+    }
+
+    .menu-btn {
+      display: none;
+      border: 1px solid #ddd;
+      background: white;
+      padding: 9px 12px;
+      border-radius: 7px;
+      cursor: pointer;
+    }
+
+    /* HERO */
+
+    .hero {
+      padding: 105px 0 90px;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+    }
+
+    .eyebrow {
+      font-size: 13px;
+      color: #777;
+      margin-bottom: 18px;
+      font-weight: 600;
+      letter-spacing: .5px;
+    }
+
+    .hero h1 {
+      max-width: 800px;
+      margin: auto;
+      font-size: clamp(42px, 7vw, 74px);
+      line-height: 1;
+      letter-spacing: -3px;
+    }
+
+    .hero p {
+      max-width: 650px;
+      margin: 25px auto 32px;
+      font-size: 18px;
+      color: #666;
+    }
+
+    .search-box {
+      max-width: 680px;
+      margin: auto;
+      display: flex;
+      border: 1px solid #dcdcdc;
+      border-radius: 10px;
+      padding: 6px;
+      background: #fff;
+      box-shadow: 0 10px 35px rgba(0,0,0,.06);
+    }
+
+    .search-box input {
+      flex: 1;
+      border: 0;
+      outline: 0;
+      padding: 13px;
+      min-width: 0;
+    }
+
+    .search-box button {
+      border: 0;
+      background: #111;
+      color: #fff;
+      padding: 0 22px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    /* TRUST */
+
+    .trust {
+      border-bottom: 1px solid #eee;
+    }
+
+    .trust-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .trust-item {
+      padding: 28px 20px;
+      text-align: center;
+      border-right: 1px solid #eee;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .trust-item:last-child {
+      border-right: 0;
+    }
+
+    .trust-item strong {
+      display: block;
+      color: #111;
+      margin-bottom: 5px;
+    }
+
+    /* SECTIONS */
+
+    section {
+      padding: 90px 0;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      margin-bottom: 35px;
+      gap: 20px;
+    }
+
+    .section-head h2 {
+      font-size: 36px;
+      letter-spacing: -1.5px;
+    }
+
+    .section-head p {
+      color: #777;
+      max-width: 500px;
+    }
+
+    /* CATEGORIES */
+
+    .categories {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
+    }
+
+    .category {
+      border: 1px solid #e4e4e4;
+      border-radius: 9px;
+      padding: 25px 15px;
+      text-align: center;
+      cursor: pointer;
+      transition: .2s;
+      background: white;
+    }
+
+    .category:hover {
+      border-color: #111;
+      transform: translateY(-2px);
+    }
+
+    .category strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .category span {
+      font-size: 12px;
+      color: #777;
+    }
+
+    /* DEALS */
+
+    .deals {
+      background: #f7f7f7;
+    }
+
+    .deal-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .deal-card {
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .deal-image {
+      height: 210px;
+      background: #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #999;
+      font-size: 13px;
+    }
+
+    .deal-content {
+      padding: 20px;
+    }
+
+    .deal-category {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #888;
+      letter-spacing: .5px;
+    }
+
+    .deal-title {
+      font-size: 18px;
+      margin: 8px 0;
+      font-weight: 700;
+    }
+
+    .deal-price {
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    .deal-old-price {
+      margin-left: 7px;
+      color: #999;
+      text-decoration: line-through;
+      font-size: 14px;
+    }
+
+    .deal-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 17px;
+    }
+
+    .deal-actions button {
+      flex: 1;
+      padding: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid #ddd;
+      background: white;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .deal-actions button.primary {
+      background: #111;
+      color: #fff;
+      border-color: #111;
+    }
+
+    /* INTELLIGENCE */
+
+    .intelligence {
+      background: #111;
+      color: #fff;
+    }
+
+    .intelligence .section-head p {
+      color: #aaa;
+    }
+
+    .intelligence-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .intelligence-card {
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 30px;
+    }
+
+    .intelligence-card h3 {
+      margin-bottom: 10px;
+    }
+
+    .intelligence-card p {
+      color: #aaa;
+      font-size: 14px;
+    }
+
+    /* HOW IT WORKS */
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .step {
+      border-top: 1px solid #111;
+      padding-top: 22px;
+    }
+
+    .step-number {
+      color: #888;
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+
+    .step h3 {
+      margin-bottom: 8px;
+    }
+
+    .step p {
+      color: #777;
+      font-size: 14px;
+    }
+
+    /* ACCOUNT */
+
+    .account-box {
+      background: #f5f5f5;
+      border-radius: 12px;
+      padding: 65px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 30px;
+    }
+
+    .account-box h2 {
+      font-size: 38px;
+      letter-spacing: -1.5px;
+      margin-bottom: 10px;
+    }
+
+    .account-box p {
+      color: #777;
+    }
+
+    /* FOOTER */
+
+    footer {
+      border-top: 1px solid #eee;
+      padding: 50px 0;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 40px;
+    }
+
+    .footer-brand p {
+      color: #777;
+      max-width: 300px;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+
+    footer h4 {
+      margin-bottom: 15px;
+    }
+
+    footer a {
+      display: block;
+      color: #777;
+      font-size: 13px;
+      margin-bottom: 9px;
+    }
+
+    footer a:hover {
+      color: #111;
+    }
+
+    .copyright {
+      margin-top: 45px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+      color: #999;
+      font-size: 12px;
+    }
+
+    /* MODAL */
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 20px;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-box {
+      width: min(430px, 100%);
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      font-size: 20px;
+    }
+
+    .modal-box h2 {
+      margin-bottom: 8px;
+    }
+
+    .modal-box p {
+      color: #777;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    .modal-box input {
+      width: 100%;
+      border: 1px solid #ddd;
+      padding: 12px;
+      border-radius: 7px;
+      margin-bottom: 10px;
+      outline: 0;
+    }
+
+    .modal-box .btn {
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    /* RESPONSIVE */
+
+    @media(max-width: 900px) {
+      .nav-links {
+        display: none;
+      }
+
+      .menu-btn {
+        display: block;
+      }
+
+      .trust-grid,
+      .categories {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .deal-grid,
+      .intelligence-grid,
+      .steps {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .account-box {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 40px;
+      }
+    }
+
+    @media(max-width: 600px) {
+      .nav-actions .btn {
+        display: none;
+      }
+
+      .hero {
+        padding: 75px 0 65px;
+      }
+
+      .hero h1 {
+        letter-spacing: -2px;
+      }
+
+      .search-box {
+        flex-direction: column;
+        gap: 6px;
+        border: 0;
+        box-shadow: none;
+      }
+
+      .search-box input,
+      .search-box button {
+        min-height: 48px;
+        border: 1px solid #ddd;
+        border-radius: 7px;
+      }
+
+      .search-box button {
+        background: #111;
+        border-color: #111;
+      }
+
+      .trust-grid,
+      .categories,
+      .footer-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .trust-item {
+        border-right: 0;
+        border-bottom: 1px solid #eee;
+      }
+
+      .section-head {
+        display: block;
+      }
+
+      .section-head p {
+        margin-top: 10px;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
-<nav>
-    <div class="container nav-inner">
-        <div class="logo">Deal<span>Bot</span></div>
+<header>
+  <div class="container nav">
 
-        <div class="nav-links">
-            <a href="#deals">Deals</a>
-            <a href="#categories">Categories</a>
-            <a href="#how">How it works</a>
+    <a href="#" class="logo">DealBot</a>
+
+    <nav class="nav-links">
+      <a href="#deals" data-i18n="nav.explore">Explore Deals</a>
+      <a href="#categories" data-i18n="nav.categories">Categories</a>
+      <a href="#intelligence" data-i18n="nav.intelligence">DealBot Intelligence</a>
+      <a href="#how" data-i18n="nav.how">How it works</a>
+    </nav>
+
+    <div class="nav-actions">
+
+      <div class="language-switcher">
+        <button id="frBtn" onclick="setLanguage('fr')">FR</button>
+        <button id="enBtn" onclick="setLanguage('en')">EN</button>
+      </div>
+
+      <button class="btn secondary" onclick="openModal('login')" data-i18n="nav.signin">
+        Sign in
+      </button>
+
+      <button class="btn" onclick="openModal('signup')" data-i18n="nav.create">
+        Create account
+      </button>
+
+      <button class="menu-btn" onclick="mobileMenu()" data-i18n="nav.menu">
+        Menu
+      </button>
+
+    </div>
+  </div>
+</header>
+
+
+<main>
+
+  <!-- HERO -->
+
+  <section class="hero">
+    <div class="container">
+
+      <div class="eyebrow" data-i18n="hero.eyebrow">
+        Deal discovery platform
+      </div>
+
+      <h1 data-i18n="hero.title">
+        Find better deals before you buy.
+      </h1>
+
+      <p data-i18n="hero.text">
+        Discover products, compare prices and track opportunities across the web with DealBot.
+      </p>
+
+      <div class="search-box">
+        <input
+          id="searchInput"
+          type="text"
+          data-i18n-placeholder="hero.search"
+          placeholder="Search products, brands or categories..."
+        >
+
+        <button onclick="searchDeals()" data-i18n="hero.searchButton">
+          Search
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- TRUST -->
+
+  <div class="trust">
+    <div class="container trust-grid">
+
+      <div class="trust-item">
+        <strong data-i18n="trust.one.title">Product discovery</strong>
+        <span data-i18n="trust.one.text">Explore products from multiple sources</span>
+      </div>
+
+      <div class="trust-item">
+        <strong data-i18n="trust.two.title">Price comparison</strong>
+        <span data-i18n="trust.two.text">Compare offers before buying</span>
+      </div>
+
+      <div class="trust-item">
+        <strong data-i18n="trust.three.title">Deal tracking</strong>
+        <span data-i18n="trust.three.text">Keep an eye on changing prices</span>
+      </div>
+
+      <div class="trust-item">
+        <strong data-i18n="trust.four.title">Personal alerts</strong>
+        <span data-i18n="trust.four.text">Follow the products you want</span>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- CATEGORIES -->
+
+  <section id="categories">
+    <div class="container">
+
+      <div class="section-head">
+        <div>
+          <h2 data-i18n="categories.title">Explore categories</h2>
         </div>
 
-        <a href="#deals" class="nav-button">Explore deals</a>
+        <p data-i18n="categories.text">
+          Browse products by the categories that matter to you.
+        </p>
+      </div>
+
+      <div class="categories">
+
+        <div class="category" onclick="filterCategory('Technology')">
+          <strong data-i18n="cat.tech">Technology</strong>
+          <span data-i18n="cat.techText">Phones, laptops and more</span>
+        </div>
+
+        <div class="category" onclick="filterCategory('Games')">
+          <strong data-i18n="cat.games">Games</strong>
+          <span data-i18n="cat.gamesText">Gaming products and software</span>
+        </div>
+
+        <div class="category" onclick="filterCategory('Fashion')">
+          <strong data-i18n="cat.fashion">Fashion</strong>
+          <span data-i18n="cat.fashionText">Clothing and accessories</span>
+        </div>
+
+        <div class="category" onclick="filterCategory('Home')">
+          <strong data-i18n="cat.home">Home</strong>
+          <span data-i18n="cat.homeText">Products for your home</span>
+        </div>
+
+        <div class="category" onclick="filterCategory('Travel')">
+          <strong data-i18n="cat.travel">Travel</strong>
+          <span data-i18n="cat.travelText">Travel and accommodation</span>
+        </div>
+
+        <div class="category" onclick="filterCategory('Software')">
+          <strong data-i18n="cat.software">Software</strong>
+          <span data-i18n="cat.softwareText">Apps and digital tools</span>
+        </div>
+
+      </div>
+
     </div>
-</nav>
+  </section>
 
-<section class="hero">
-    <div class="container hero-content">
 
-        <div class="badge">⚡ Smart deal discovery</div>
+  <!-- DEALS -->
 
-        <h1>
-            Find better deals.<br>
-            <span class="gradient">Save more.</span>
-        </h1>
+  <section class="deals" id="deals">
 
-        <p>
-            DealBot helps you discover interesting discounts,
-            offers and products from stores around the web.
+    <div class="container">
+
+      <div class="section-head">
+
+        <div>
+          <h2 data-i18n="deals.title">Featured deals</h2>
+        </div>
+
+        <p data-i18n="deals.text">
+          A preview of the type of offers DealBot will discover.
         </p>
 
-        <div class="search">
-            <input type="text" placeholder="Search products, deals or categories...">
-            <button>Search</button>
-        </div>
+      </div>
+
+      <div class="deal-grid" id="dealGrid"></div>
 
     </div>
-</section>
 
-<section class="section" id="categories">
+  </section>
+
+
+  <!-- INTELLIGENCE -->
+
+  <section class="intelligence" id="intelligence">
 
     <div class="container">
 
-        <div class="section-title">
-            <h2>Explore categories</h2>
-            <p>Find deals in the categories you care about.</p>
+      <div class="section-head">
+
+        <div>
+          <h2 data-i18n="intel.title">DealBot Intelligence</h2>
         </div>
 
-        <div class="categories">
+        <p data-i18n="intel.text">
+          Tools designed to help users understand whether an offer is worth considering.
+        </p>
 
-            <div class="category">
-                <span class="category-icon">📱</span>
-                Technology
-            </div>
+      </div>
 
-            <div class="category">
-                <span class="category-icon">🎮</span>
-                Games
-            </div>
+      <div class="intelligence-grid">
 
-            <div class="category">
-                <span class="category-icon">👕</span>
-                Fashion
-            </div>
-
-            <div class="category">
-                <span class="category-icon">🏠</span>
-                Home
-            </div>
-
-            <div class="category">
-                <span class="category-icon">✈️</span>
-                Travel
-            </div>
-
-            <div class="category">
-                <span class="category-icon">💻</span>
-                Software
-            </div>
-
+        <div class="intelligence-card">
+          <h3 data-i18n="intel.one.title">Deal scoring</h3>
+          <p data-i18n="intel.one.text">
+            Evaluate offers using price, historical data and other signals.
+          </p>
         </div>
+
+        <div class="intelligence-card">
+          <h3 data-i18n="intel.two.title">Price monitoring</h3>
+          <p data-i18n="intel.two.text">
+            Follow price movements and identify interesting opportunities.
+          </p>
+        </div>
+
+        <div class="intelligence-card">
+          <h3 data-i18n="intel.three.title">Personal discovery</h3>
+          <p data-i18n="intel.three.text">
+            Help users discover products that match their interests.
+          </p>
+        </div>
+
+      </div>
 
     </div>
 
-</section>
+  </section>
 
-<section class="section" id="deals">
+
+  <!-- HOW -->
+
+  <section id="how">
 
     <div class="container">
 
-        <div class="section-title">
-            <h2>Featured deals</h2>
-            <p>Interesting offers selected by DealBot.</p>
+      <div class="section-head">
+
+        <div>
+          <h2 data-i18n="how.title">How DealBot works</h2>
         </div>
 
-        <div class="deals">
+        <p data-i18n="how.text">
+          A simple way to discover and follow better opportunities.
+        </p>
 
-            <article class="deal">
+      </div>
 
-                <div class="deal-image">🎧</div>
+      <div class="steps">
 
-                <div class="deal-content">
-
-                    <span class="discount">SAVE 30%</span>
-
-                    <h3>Wireless Headphones</h3>
-
-                    <p>
-                        Premium wireless audio with
-                        noise cancellation.
-                    </p>
-
-                    <span class="price">$69</span>
-                    <span class="old-price">$99</span>
-
-                    <a href="#" class="deal-button">
-                        View Deal →
-                    </a>
-
-                </div>
-
-            </article>
-
-
-            <article class="deal">
-
-                <div class="deal-image">⌨️</div>
-
-                <div class="deal-content">
-
-                    <span class="discount">SAVE 25%</span>
-
-                    <h3>Mechanical Keyboard</h3>
-
-                    <p>
-                        Compact mechanical keyboard
-                        for work and gaming.
-                    </p>
-
-                    <span class="price">$59</span>
-                    <span class="old-price">$79</span>
-
-                    <a href="#" class="deal-button">
-                        View Deal →
-                    </a>
-
-                </div>
-
-            </article>
-
-
-            <article class="deal">
-
-                <div class="deal-image">⌚</div>
-
-                <div class="deal-content">
-
-                    <span class="discount">SAVE 20%</span>
-
-                    <h3>Smart Watch</h3>
-
-                    <p>
-                        Smart fitness tracking and
-                        everyday notifications.
-                    </p>
-
-                    <span class="price">$79</span>
-                    <span class="old-price">$99</span>
-
-                    <a href="#" class="deal-button">
-                        View Deal →
-                    </a>
-
-                </div>
-
-            </article>
-
+        <div class="step">
+          <div class="step-number">01</div>
+          <h3 data-i18n="how.one.title">Discover</h3>
+          <p data-i18n="how.one.text">
+            Search for products and explore available offers.
+          </p>
         </div>
+
+        <div class="step">
+          <div class="step-number">02</div>
+          <h3 data-i18n="how.two.title">Evaluate</h3>
+          <p data-i18n="how.two.text">
+            Compare prices and deal information before making a decision.
+          </p>
+        </div>
+
+        <div class="step">
+          <div class="step-number">03</div>
+          <h3 data-i18n="how.three.title">Track</h3>
+          <p data-i18n="how.three.text">
+            Save products and follow future price changes.
+          </p>
+        </div>
+
+      </div>
 
     </div>
 
-</section>
+  </section>
 
-<section class="section" id="how">
+
+  <!-- ACCOUNT -->
+
+  <section>
 
     <div class="container">
 
-        <div class="section-title">
-            <h2>How DealBot works</h2>
-            <p>A simple way to discover interesting offers.</p>
+      <div class="account-box">
+
+        <div>
+          <h2 data-i18n="account.title">
+            Build your personal deal list.
+          </h2>
+
+          <p data-i18n="account.text">
+            Save products, follow prices and keep everything in one place.
+          </p>
         </div>
 
-        <div class="steps">
+        <button class="btn" onclick="openModal('signup')" data-i18n="account.button">
+          Create free account
+        </button>
 
-            <div class="step">
-                <div class="step-number">1</div>
-                <h3>Discover</h3>
-                <p>
-                    DealBot searches for interesting
-                    products and offers.
-                </p>
-            </div>
-
-            <div class="step">
-                <div class="step-number">2</div>
-                <h3>Compare</h3>
-                <p>
-                    We highlight attractive prices,
-                    discounts and opportunities.
-                </p>
-            </div>
-
-            <div class="step">
-                <div class="step-number">3</div>
-                <h3>Save</h3>
-                <p>
-                    Visit the store through the deal
-                    link and make your purchase.
-                </p>
-            </div>
-
-        </div>
+      </div>
 
     </div>
 
-</section>
+  </section>
 
-<section class="section">
+</main>
 
-    <div class="container">
 
-        <div class="cta">
-
-            <h2>Stop overpaying.</h2>
-
-            <p>
-                Discover interesting deals with DealBot.
-            </p>
-
-            <a href="#deals" class="cta-button">
-                Explore deals
-            </a>
-
-        </div>
-
-    </div>
-
-</section>
+<!-- FOOTER -->
 
 <footer>
 
-    <div class="container footer-inner">
+  <div class="container">
 
-        <strong>DealBot</strong>
+    <div class="footer-grid">
 
-        <p>
-            © 2026 DealBot. Deals, offers and discounts discovery platform.
+      <div class="footer-brand">
+        <div class="logo">DealBot</div>
+
+        <p data-i18n="footer.description">
+          A deal discovery platform designed to help people find and compare better offers.
         </p>
+      </div>
+
+      <div>
+        <h4 data-i18n="footer.explore">Explore</h4>
+        <a href="#deals" data-i18n="nav.explore">Explore Deals</a>
+        <a href="#categories" data-i18n="nav.categories">Categories</a>
+        <a href="#intelligence" data-i18n="nav.intelligence">DealBot Intelligence</a>
+      </div>
+
+      <div>
+        <h4 data-i18n="footer.account">Account</h4>
+        <a href="#" onclick="openModal('login')" data-i18n="nav.signin">Sign in</a>
+        <a href="#" onclick="openModal('signup')" data-i18n="nav.create">Create account</a>
+      </div>
+
+      <div>
+        <h4 data-i18n="footer.company">Company</h4>
+        <a href="#how" data-i18n="nav.how">How it works</a>
+        <a href="#" data-i18n="footer.about">About DealBot</a>
+      </div>
 
     </div>
 
+    <div class="copyright">
+      © 2026 DealBot. All rights reserved.
+    </div>
+
+  </div>
+
 </footer>
+
+
+<!-- LOGIN / SIGNUP MODAL -->
+
+<div class="modal" id="accountModal">
+
+  <div class="modal-box">
+
+    <button class="modal-close" onclick="closeModal()">×</button>
+
+    <h2 id="modalTitle">Sign in</h2>
+
+    <p id="modalDescription">
+      Access your DealBot account.
+    </p>
+
+    <input
+      type="email"
+      id="emailInput"
+      data-i18n-placeholder="modal.email"
+      placeholder="Email address"
+    >
+
+    <input
+      type="password"
+      id="passwordInput"
+      data-i18n-placeholder="modal.password"
+      placeholder="Password"
+    >
+
+    <button class="btn" onclick="submitAccount()" id="modalButton">
+      Sign in
+    </button>
+
+  </div>
+
+</div>
+
+
+<script>
+
+  /* =========================
+     TRANSLATIONS
+  ========================= */
+
+  const translations = {
+
+    fr: {
+
+      "nav.explore": "Explorer les offres",
+      "nav.categories": "Catégories",
+      "nav.intelligence": "Intelligence DealBot",
+      "nav.how": "Comment ça marche",
+      "nav.signin": "Se connecter",
+      "nav.create": "Créer un compte",
+      "nav.menu": "Menu",
+
+      "hero.eyebrow": "Plateforme de découverte d'offres",
+      "hero.title": "Trouvez de meilleures offres avant d'acheter.",
+      "hero.text": "Découvrez des produits, comparez les prix et suivez les opportunités sur le web avec DealBot.",
+      "hero.search": "Rechercher un produit, une marque ou une catégorie...",
+      "hero.searchButton": "Rechercher",
+
+      "trust.one.title": "Découverte de produits",
+      "trust.one.text": "Explorez des produits provenant de plusieurs sources",
+      "trust.two.title": "Comparaison des prix",
+      "trust.two.text": "Comparez les offres avant d'acheter",
+      "trust.three.title": "Suivi des offres",
+      "trust.three.text": "Suivez l'évolution des prix",
+      "trust.four.title": "Alertes personnalisées",
+      "trust.four.text": "Suivez les produits qui vous intéressent",
+
+      "categories.title": "Explorer les catégories",
+      "categories.text": "Parcourez les produits selon les catégories qui vous intéressent.",
+
+      "cat.tech": "Technologie",
+      "cat.techText": "Téléphones, ordinateurs et plus",
+      "cat.games": "Jeux",
+      "cat.gamesText": "Produits et logiciels gaming",
+      "cat.fashion": "Mode",
+      "cat.fashionText": "Vêtements et accessoires",
+      "cat.home": "Maison",
+      "cat.homeText": "Produits pour votre maison",
+      "cat.travel": "Voyage",
+      "cat.travelText": "Voyages et hébergements",
+      "cat.software": "Logiciels",
+      "cat.softwareText": "Applications et outils numériques",
+
+      "deals.title": "Offres à découvrir",
+      "deals.text": "Un aperçu du type d'offres que DealBot pourra découvrir.",
+
+      "intel.title": "Intelligence DealBot",
+      "intel.text": "Des outils conçus pour aider les utilisateurs à comprendre si une offre mérite leur attention.",
+
+      "intel.one.title": "Évaluation des offres",
+      "intel.one.text": "Analysez les offres selon le prix, les données historiques et d'autres indicateurs.",
+      "intel.two.title": "Suivi des prix",
+      "intel.two.text": "Suivez les variations de prix et identifiez les opportunités intéressantes.",
+      "intel.three.title": "Découverte personnalisée",
+      "intel.three.text": "Découvrez des produits correspondant à vos centres d'intérêt.",
+
+      "how.title": "Comment fonctionne DealBot",
+      "how.text": "Une manière simple de découvrir et de suivre de meilleures opportunités.",
+      "how.one.title": "Découvrir",
+      "how.one.text": "Recherchez des produits et explorez les offres disponibles.",
+      "how.two.title": "Évaluer",
+      "how.two.text": "Comparez les prix et les informations avant de prendre une décision.",
+      "how.three.title": "Suivre",
+      "how.three.text": "Enregistrez vos produits et suivez l'évolution future des prix.",
+
+      "account.title": "Créez votre liste personnelle d'offres.",
+      "account.text": "Enregistrez des produits, suivez les prix et gardez tout au même endroit.",
+      "account.button": "Créer un compte gratuitement",
+
+      "footer.description": "Une plateforme de découverte d'offres conçue pour aider les utilisateurs à trouver et comparer de meilleures opportunités.",
+      "footer.explore": "Explorer",
+      "footer.account": "Compte",
+      "footer.company": "Entreprise",
+      "footer.about": "À propos de DealBot",
+
+      "modal.email": "Adresse e-mail",
+      "modal.password": "Mot de passe",
+
+      "modal.loginTitle": "Se connecter",
+      "modal.loginDescription": "Accédez à votre compte DealBot.",
+      "modal.loginButton": "Se connecter",
+
+      "modal.signupTitle": "Créer un compte",
+      "modal.signupDescription": "Créez votre compte DealBot gratuitement.",
+      "modal.signupButton": "Créer mon compte",
+
+      "alert.search": "Aucun résultat trouvé pour cette recherche.",
+      "alert.login": "La connexion réelle sera activée prochainement.",
+      "alert.signup": "La création de compte réelle sera activée prochainement.",
+      "alert.deal": "Les offres réelles et les liens partenaires seront ajoutés prochainement.",
+      "alert.save": "La sauvegarde des offres sera disponible avec les comptes utilisateurs."
+    },
+
+    en: {
+
+      "nav.explore": "Explore Deals",
+      "nav.categories": "Categories",
+      "nav.intelligence": "DealBot Intelligence",
+      "nav.how": "How it works",
+      "nav.signin": "Sign in",
+      "nav.create": "Create account",
+      "nav.menu": "Menu",
+
+      "hero.eyebrow": "Deal discovery platform",
+      "hero.title": "Find better deals before you buy.",
+      "hero.text": "Discover products, compare prices and track opportunities across the web with DealBot.",
+      "hero.search": "Search products, brands or categories...",
+      "hero.searchButton": "Search",
+
+      "trust.one.title": "Product discovery",
+      "trust.one.text": "Explore products from multiple sources",
+      "trust.two.title": "Price comparison",
+      "trust.two.text": "Compare offers before buying",
+      "trust.three.title": "Deal tracking",
+      "trust.three.text": "Keep an eye on changing prices",
+      "trust.four.title": "Personal alerts",
+      "trust.four.text": "Follow the products you want",
+
+      "categories.title": "Explore categories",
+      "categories.text": "Browse products by the categories that matter to you.",
+
+      "cat.tech": "Technology",
+      "cat.techText": "Phones, laptops and more",
+      "cat.games": "Games",
+      "cat.gamesText": "Gaming products and software",
+      "cat.fashion": "Fashion",
+      "cat.fashionText": "Clothing and accessories",
+      "cat.home": "Home",
+      "cat.homeText": "Products for your home",
+      "cat.travel": "Travel",
+      "cat.travelText": "Travel and accommodation",
+      "cat.software": "Software",
+      "cat.softwareText": "Apps and digital tools",
+
+      "deals.title": "Featured deals",
+      "deals.text": "A preview of the type of offers DealBot will discover.",
+
+      "intel.title": "DealBot Intelligence",
+      "intel.text": "Tools designed to help users understand whether an offer is worth considering.",
+
+      "intel.one.title": "Deal scoring",
+      "intel.one.text": "Evaluate offers using price, historical data and other signals.",
+      "intel.two.title": "Price monitoring",
+      "intel.two.text": "Follow price movements and identify interesting opportunities.",
+      "intel.three.title": "Personal discovery",
+      "intel.three.text": "Help users discover products that match their interests.",
+
+      "how.title": "How DealBot works",
+      "how.text": "A simple way to discover and follow better opportunities.",
+      "how.one.title": "Discover",
+      "how.one.text": "Search for products and explore available offers.",
+      "how.two.title": "Evaluate",
+      "how.two.text": "Compare prices and deal information before making a decision.",
+      "how.three.title": "Track",
+      "how.three.text": "Save products and follow future price changes.",
+
+      "account.title": "Build your personal deal list.",
+      "account.text": "Save products, follow prices and keep everything in one place.",
+      "account.button": "Create free account",
+
+      "footer.description": "A deal discovery platform designed to help people find and compare better offers.",
+      "footer.explore": "Explore",
+      "footer.account": "Account",
+      "footer.company": "Company",
+      "footer.about": "About DealBot",
+
+      "modal.email": "Email address",
+      "modal.password": "Password",
+
+      "modal.loginTitle": "Sign in",
+      "modal.loginDescription": "Access your DealBot account.",
+      "modal.loginButton": "Sign in",
+
+      "modal.signupTitle": "Create an account",
+      "modal.signupDescription": "Create your DealBot account for free.",
+      "modal.signupButton": "Create my account",
+
+      "alert.search": "No results found for this search.",
+      "alert.login": "Real account login will be activated soon.",
+      "alert.signup": "Real account creation will be activated soon.",
+      "alert.deal": "Real offers and affiliate links will be added soon.",
+      "alert.save": "Saving deals will be available with user accounts."
+    }
+
+  };
+
+
+  /* =========================
+     LANGUAGE
+  ========================= */
+
+  let currentLanguage = localStorage.getItem("dealbotLanguage") || "fr";
+
+  function setLanguage(language) {
+
+    currentLanguage = language;
+
+    localStorage.setItem("dealbotLanguage", language);
+
+    document.documentElement.lang = language;
+
+    document.querySelectorAll("[data-i18n]").forEach(element => {
+
+      const key = element.getAttribute("data-i18n");
+
+      if (translations[language][key]) {
+        element.textContent = translations[language][key];
+      }
+
+    });
+
+    document.querySelectorAll("[data-i18n-placeholder]").forEach(element => {
+
+      const key = element.getAttribute("data-i18n-placeholder");
+
+      if (translations[language][key]) {
+        element.placeholder = translations[language][key];
+      }
+
+    });
+
+    document.getElementById("frBtn").classList.toggle(
+      "active",
+      language === "fr"
+    );
+
+    document.getElementById("enBtn").classList.toggle(
+      "active",
+      language === "en"
+    );
+
+    updateModalLanguage();
+
+    renderDeals();
+  }
+
+
+  /* =========================
+     DEMO DEAL DATABASE
+  ========================= */
+
+  const deals = [
+
+    {
+      category: "Technology",
+      title: "Wireless Headphones",
+      price: "$39.99",
+      oldPrice: "$69.99"
+    },
+
+    {
+      category: "Technology",
+      title: "Smartphone 128GB",
+      price: "$299.00",
+      oldPrice: "$379.00"
+    },
+
+    {
+      category: "Games",
+      title: "Gaming Controller",
+      price: "$49.99",
+      oldPrice: "$69.99"
+    },
+
+    {
+      category: "Fashion",
+      title: "Oversized Cotton Hoodie",
+      price: "$34.99",
+      oldPrice: "$59.99"
+    },
+
+    {
+      category: "Home",
+      title: "Air Fryer",
+      price: "$59.99",
+      oldPrice: "$89.99"
+    },
+
+    {
+      category: "Software",
+      title: "Productivity Software",
+      price: "$19.99",
+      oldPrice: "$39.99"
+    }
+
+  ];
+
+
+  /* =========================
+     DEAL RENDERING
+  ========================= */
+
+  function renderDeals(list = deals) {
+
+    const grid = document.getElementById("dealGrid");
+
+    grid.innerHTML = "";
+
+    list.forEach(deal => {
+
+      const categoryNames = {
+
+        fr: {
+          Technology: "Technologie",
+          Games: "Jeux",
+          Fashion: "Mode",
+          Home: "Maison",
+          Travel: "Voyage",
+          Software: "Logiciels"
+        },
+
+        en: {
+          Technology: "Technology",
+          Games: "Games",
+          Fashion: "Fashion",
+          Home: "Home",
+          Travel: "Travel",
+          Software: "Software"
+        }
+
+      };
+
+      const category =
+        categoryNames[currentLanguage][deal.category] || deal.category;
+
+      const saveText =
+        currentLanguage === "fr"
+          ? "Enregistrer"
+          : "Save";
+
+      const viewText =
+        currentLanguage === "fr"
+          ? "Voir l'offre"
+          : "View deal";
+
+      const imageText =
+        currentLanguage === "fr"
+          ? "Aperçu du produit"
+          : "Product preview";
+
+      grid.innerHTML += `
+
+        <div class="deal-card">
+
+          <div class="deal-image">
+            ${imageText}
+          </div>
+
+          <div class="deal-content">
+
+            <div class="deal-category">
+              ${category}
+            </div>
+
+            <div class="deal-title">
+              ${deal.title}
+            </div>
+
+            <div>
+              <span class="deal-price">
+                ${deal.price}
+              </span>
+
+              <span class="deal-old-price">
+                ${deal.oldPrice}
+              </span>
+            </div>
+
+            <div class="deal-actions">
+
+              <button onclick="saveDeal()">
+                ${saveText}
+              </button>
+
+              <button
+                class="primary"
+                onclick="viewDeal()"
+              >
+                ${viewText}
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      `;
+
+    });
+
+  }
+
+
+  /* =========================
+     SEARCH
+  ========================= */
+
+  function searchDeals() {
+
+    const query =
+      document
+        .getElementById("searchInput")
+        .value
+        .toLowerCase()
+        .trim();
+
+    if (!query) {
+
+      renderDeals(deals);
+
+      document
+        .getElementById("deals")
+        .scrollIntoView({ behavior: "smooth" });
+
+      return;
+    }
+
+    const results = deals.filter(deal =>
+      deal.title.toLowerCase().includes(query) ||
+      deal.category.toLowerCase().includes(query)
+    );
+
+    renderDeals(results);
+
+    document
+      .getElementById("deals")
+      .scrollIntoView({ behavior: "smooth" });
+
+    if (results.length === 0) {
+      alert(translations[currentLanguage]["alert.search"]);
+    }
+
+  }
+
+
+  document
+    .getElementById("searchInput")
+    .addEventListener("keydown", function(event) {
+
+      if (event.key === "Enter") {
+        searchDeals();
+      }
+
+    });
+
+
+  /* =========================
+     CATEGORY FILTER
+  ========================= */
+
+  function filterCategory(category) {
+
+    const results =
+      deals.filter(deal =>
+        deal.category === category
+      );
+
+    renderDeals(results);
+
+    document
+      .getElementById("deals")
+      .scrollIntoView({ behavior: "smooth" });
+
+  }
+
+
+  /* =========================
+     MODAL
+  ========================= */
+
+  let modalMode = "login";
+
+  function openModal(mode) {
+
+    modalMode = mode;
+
+    document
+      .getElementById("accountModal")
+      .classList.add("show");
+
+    updateModalLanguage();
+
+  }
+
+  function closeModal() {
+
+    document
+      .getElementById("accountModal")
+      .classList.remove("show");
+
+  }
+
+
+  function updateModalLanguage() {
+
+    const t = translations[currentLanguage];
+
+    if (modalMode === "login") {
+
+      document.getElementById("modalTitle").textContent =
+        t["modal.loginTitle"];
+
+      document.getElementById("modalDescription").textContent =
+        t["modal.loginDescription"];
+
+      document.getElementById("modalButton").textContent =
+        t["modal.loginButton"];
+
+    } else {
+
+      document.getElementById("modalTitle").textContent =
+        t["modal.signupTitle"];
+
+      document.getElementById("modalDescription").textContent =
+        t["modal.signupDescription"];
+
+      document.getElementById("modalButton").textContent =
+        t["modal.signupButton"];
+
+    }
+
+    document.getElementById("emailInput").placeholder =
+      t["modal.email"];
+
+    document.getElementById("passwordInput").placeholder =
+      t["modal.password"];
+
+  }
+
+
+  function submitAccount() {
+
+    const key =
+      modalMode === "login"
+        ? "alert.login"
+        : "alert.signup";
+
+    alert(translations[currentLanguage][key]);
+
+  }
+
+
+  /* =========================
+     DEMO ACTIONS
+  ========================= */
+
+  function saveDeal() {
+
+    alert(
+      translations[currentLanguage]["alert.save"]
+    );
+
+  }
+
+
+  function viewDeal() {
+
+    alert(
+      translations[currentLanguage]["alert.deal"]
+    );
+
+  }
+
+
+  function mobileMenu() {
+
+    alert(
+      currentLanguage === "fr"
+        ? "Le menu mobile sera activé prochainement."
+        : "The mobile menu will be activated soon."
+    );
+
+  }
+
+
+  /* =========================
+     CLOSE MODAL WHEN CLICKING OUTSIDE
+  ========================= */
+
+  document
+    .getElementById("accountModal")
+    .addEventListener("click", function(event) {
+
+      if (event.target === this) {
+        closeModal();
+      }
+
+    });
+
+
+  /* =========================
+     INITIALIZE
+  ========================= */
+
+  setLanguage(currentLanguage);
+
+</script>
 
 </body>
 </html>
