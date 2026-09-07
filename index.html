@@ -1510,7 +1510,233 @@
 
       font-size: 0.75rem;
     }
+ /* =========================
+   MODERN MICRO-INTERACTIONS
+========================= */
 
+.page.active {
+  animation: pageIn 0.32s ease both;
+}
+
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.product-card,
+.category-card,
+.intel-card,
+.compare-pick-card,
+.content-card,
+.alert-form,
+.filters {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.product-card:hover,
+.intel-card:hover,
+.compare-pick-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 30px rgba(19, 32, 41, 0.08);
+}
+
+.category-card:hover {
+  transform: translateY(-2px);
+}
+
+.btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.08);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  pointer-events: none;
+}
+
+.btn:hover::after {
+  opacity: 1;
+}
+
+.hero h1,
+.hero-lead,
+.search-panel {
+  animation: heroReveal 0.55s ease both;
+}
+
+.hero-lead {
+  animation-delay: 0.08s;
+}
+
+.search-panel {
+  animation-delay: 0.14s;
+}
+
+@keyframes heroReveal {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.score-pill {
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease;
+}
+
+.product-card:hover .score-pill,
+.intel-card:hover .gauge-score {
+  transform: scale(1.04);
+}
+
+.admin-card {
+  padding: 22px;
+  background: var(--white);
+  border: 1px solid var(--line);
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.admin-stat {
+  padding: 18px;
+  background: var(--white);
+  border: 1px solid var(--line);
+}
+
+.admin-stat span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-stat strong {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+}
+
+.admin-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  min-width: 850px;
+  border-collapse: collapse;
+  background: var(--white);
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 12px;
+  border: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+  font-size: 0.82rem;
+}
+
+.admin-table th {
+  background: var(--paper-2);
+  font-family: var(--font-serif);
+}
+
+.admin-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.admin-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.admin-form-grid .full {
+  grid-column: 1 / -1;
+}
+
+.admin-form-grid input,
+.admin-form-grid select,
+.admin-form-grid textarea {
+  width: 100%;
+  padding: 10px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+}
+
+.admin-badge {
+  display: inline-flex;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  font-size: 0.7rem;
+}
+
+.admin-warning {
+  margin-bottom: 24px;
+  padding: 13px 16px;
+  background: var(--paper-2);
+  border-left: 3px solid var(--gold);
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+}
+
+@media (max-width: 900px) {
+  .admin-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .admin-grid,
+  .admin-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-form-grid .full {
+    grid-column: auto;
+  }
+
+  .admin-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
     /* =========================
        RESPONSIVE
     ========================= */
@@ -3144,7 +3370,114 @@
 
       </div>
     </section>
+<!-- =========================
+     ADMIN PANEL
+========================== -->
 
+<section
+  class="page"
+  id="page-admin"
+  data-page-section="admin"
+>
+  <div class="container">
+
+    <div class="page-header">
+      <span class="eyebrow">
+        DealBot interne
+      </span>
+
+      <h1>
+        Administration
+      </h1>
+
+      <p>
+        Gestion temporaire du catalogue DealBot
+        avant connexion du backend sécurisé.
+      </p>
+    </div>
+
+    <div class="admin-warning">
+      Ce panneau fonctionne actuellement uniquement dans votre navigateur.
+      Il ne constitue pas encore une authentification administrateur sécurisée.
+      Il sera relié à Supabase avant la mise en production.
+    </div>
+
+    <div class="admin-grid">
+
+      <div class="admin-stat">
+        <span>Offres</span>
+        <strong id="adminStatDeals">0</strong>
+      </div>
+
+      <div class="admin-stat">
+        <span>Catégories</span>
+        <strong id="adminStatCategories">0</strong>
+      </div>
+
+      <div class="admin-stat">
+        <span>Favoris locaux</span>
+        <strong id="adminStatFavorites">0</strong>
+      </div>
+
+      <div class="admin-stat">
+        <span>Alertes locales</span>
+        <strong id="adminStatAlerts">0</strong>
+      </div>
+
+    </div>
+
+    <div class="admin-card">
+
+      <div class="admin-toolbar">
+
+        <div>
+          <h2>
+            Catalogue
+          </h2>
+
+          <p style="color:var(--ink-soft);font-size:.82rem;margin-top:4px;">
+            Ajouter, modifier ou masquer les offres de test.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="btn"
+          id="adminAddDeal"
+        >
+          Ajouter une offre
+        </button>
+
+      </div>
+
+      <div class="admin-table-wrap">
+
+        <table class="admin-table">
+
+          <thead>
+            <tr>
+              <th>Produit</th>
+              <th>Catégorie</th>
+              <th>Vendeur</th>
+              <th>Prix</th>
+              <th>Réduction</th>
+              <th>Score</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody id="adminDealsBody">
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </div>
+</section>
   </main>
 
 
@@ -3429,7 +3762,179 @@
     </div>
   </div>
 
+<!-- =========================
+     ADMIN DEAL MODAL
+========================== -->
 
+<div
+  class="modal-overlay"
+  id="adminDealModal"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="adminDealTitle"
+>
+
+  <div class="modal-box" style="max-width:700px;">
+
+    <button
+      type="button"
+      class="modal-close"
+      id="closeAdminDealModal"
+      aria-label="Fermer"
+    >
+      ×
+    </button>
+
+    <h2 id="adminDealTitle">
+      Offre DealBot
+    </h2>
+
+    <form id="adminDealForm">
+
+      <input
+        type="hidden"
+        id="adminDealId"
+      >
+
+      <div class="admin-form-grid">
+
+        <label class="full">
+          Nom du produit
+
+          <input
+            type="text"
+            id="adminDealName"
+            required
+          >
+        </label>
+
+        <label>
+          Catégorie
+
+          <select
+            id="adminDealCategory"
+            required
+          ></select>
+        </label>
+
+        <label>
+          Vendeur
+
+          <input
+            type="text"
+            id="adminDealStore"
+            required
+          >
+        </label>
+
+        <label>
+          Prix actuel
+
+          <input
+            type="number"
+            id="adminDealPrice"
+            min="0"
+            step="0.01"
+            required
+          >
+        </label>
+
+        <label>
+          Prix de référence
+
+          <input
+            type="number"
+            id="adminDealOldPrice"
+            min="0"
+            step="0.01"
+            required
+          >
+        </label>
+
+        <label>
+          DealBot Score
+
+          <input
+            type="number"
+            id="adminDealScore"
+            min="0"
+            max="100"
+            required
+          >
+        </label>
+
+        <label>
+          Disponibilité
+
+          <select
+            id="adminDealAvailability"
+          >
+            <option value="available">
+              Disponible
+            </option>
+
+            <option value="limited">
+              Stock limité
+            </option>
+
+            <option value="outofstock">
+              Épuisé
+            </option>
+          </select>
+        </label>
+
+        <label class="full">
+          Lien vendeur / affilié
+
+          <input
+            type="url"
+            id="adminDealUrl"
+            placeholder="https://..."
+          >
+        </label>
+
+        <label class="full">
+          Description
+
+          <textarea
+            id="adminDealDescription"
+            rows="5"
+            required
+          ></textarea>
+        </label>
+
+      </div>
+
+      <div
+        style="
+          display:flex;
+          justify-content:flex-end;
+          gap:8px;
+          margin-top:20px;
+        "
+      >
+
+        <button
+          type="button"
+          class="btn ghost"
+          id="cancelAdminDeal"
+        >
+          Annuler
+        </button>
+
+        <button
+          type="submit"
+          class="btn"
+        >
+          Enregistrer
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+</div>
   <!-- =========================
        TOAST
   ========================== -->
@@ -3450,12 +3955,13 @@
   ========================================================== */
 
   const STORAGE = {
-    favorites: "dealbot_favorites_v2",
-    compare: "dealbot_compare_v2",
-    alerts: "dealbot_alerts_v2",
-    language: "dealbot_language_v2",
-    demoUser: "dealbot_demo_user_v2"
-  };
+  favorites: "dealbot_favorites_v2",
+  compare: "dealbot_compare_v2",
+  alerts: "dealbot_alerts_v2",
+  language: "dealbot_language_v2",
+  demoUser: "dealbot_demo_user_v2",
+  adminDeals: "dealbot_admin_deals_v2"
+};
 
   const MAX_COMPARE = 4;
   const DEALS_PER_PAGE = 8;
@@ -3478,7 +3984,7 @@
     { id: "accessories", fr: "Accessoires", en: "Accessories" }
   ];
 
-  const DEALS = [
+  let DEALS = [
     {
       id: 1,
       name: "Apple iPhone 15 128 Go",
@@ -3704,7 +4210,24 @@
       affiliateUrl: ""
     }
   ];
+const storedAdminDeals = safeParse(
+  localStorage.getItem(STORAGE.adminDeals),
+  null
+);
 
+if (
+  Array.isArray(storedAdminDeals) &&
+  storedAdminDeals.length
+) {
+  DEALS = storedAdminDeals;
+}
+
+function saveAdminDeals() {
+  localStorage.setItem(
+    STORAGE.adminDeals,
+    JSON.stringify(DEALS)
+  );
+}
   /* =========================================================
      STATE
   ========================================================== */
@@ -3926,21 +4449,22 @@
   ========================================================== */
 
   const ROUTES = [
-    "home",
-    "explore",
-    "categories",
-    "deal",
-    "compare",
-    "intelligence",
-    "favorites",
-    "alerts",
-    "profile",
-    "how",
-    "about",
-    "contact",
-    "privacy",
-    "terms"
-  ];
+  "home",
+  "explore",
+  "categories",
+  "deal",
+  "compare",
+  "intelligence",
+  "favorites",
+  "alerts",
+  "profile",
+  "how",
+  "about",
+  "contact",
+  "privacy",
+  "terms",
+  "admin"
+];
 
   function navigate(page, options) {
     options = options || {};
@@ -4015,8 +4539,11 @@
     if (page === "profile") {
       renderProfile();
     }
-  }
 
+if (page === "admin") {
+  renderAdmin();
+}
+}
   function updateHash(page) {
     if (window.location.hash !== "#" + page) {
       window.location.hash = page;
@@ -6881,91 +7408,552 @@
     });
 
   /* =========================================================
-     SECRET ADMIN SHORTCUT — D + D
+   ADMIN SHORTCUT — D + D
+========================================================== */
 
-     Aucun mot de passe admin n'est inclus dans le frontend.
+let adminKeyTime = 0;
 
-     Tant que Supabase n'est pas connecté :
-     DD affiche seulement un message.
+function openAdminPanel() {
+  window.location.hash = "admin";
+}
 
-     Lorsque le vrai panel sera créé,
-     remplace adminGateway() par :
-       window.location.href = "/admin";
+document.addEventListener("keydown", function (event) {
+  const active = document.activeElement;
 
-     ou par la route sécurisée du projet.
-  ========================================================== */
+  const tag =
+    active && active.tagName
+      ? active.tagName.toLowerCase()
+      : "";
 
-  let firstDPress = 0;
-
-  function adminGateway() {
-    /*
-      FUTUR :
-
-      window.location.href = "/admin";
-
-      La route /admin devra vérifier le compte
-      et le rôle côté backend.
-    */
-
-    showToast(
-      state.lang === "en"
-        ? "Admin shortcut detected. The secure admin panel will become available when the backend is connected."
-        : "Raccourci administrateur détecté. Le panel sécurisé sera disponible lorsque le backend sera connecté."
+  const typing =
+    tag === "input" ||
+    tag === "textarea" ||
+    tag === "select" ||
+    (
+      active &&
+      active.isContentEditable
     );
+
+  if (typing) {
+    return;
   }
 
-  document.addEventListener(
-    "keydown",
-    function (event) {
-      const active =
-        document.activeElement;
+  if (
+    event.key.toLowerCase() !== "d"
+  ) {
+    adminKeyTime = 0;
+    return;
+  }
 
-      const tag =
-        active &&
-        active.tagName
-          ? active.tagName.toLowerCase()
-          : "";
+  const now = Date.now();
 
-      const typing =
-        tag === "input" ||
-        tag === "textarea" ||
-        tag === "select" ||
-        (
-          active &&
-          active.isContentEditable
+  if (
+    adminKeyTime &&
+    now - adminKeyTime <= 700
+  ) {
+    adminKeyTime = 0;
+
+    event.preventDefault();
+
+    openAdminPanel();
+
+    return;
+  }
+
+  adminKeyTime = now;
+});
+/* =========================================================
+   TEMPORARY ADMIN PANEL
+========================================================== */
+
+const adminDealModal =
+  document.getElementById("adminDealModal");
+
+const adminDealForm =
+  document.getElementById("adminDealForm");
+
+function populateAdminCategories() {
+  const select =
+    document.getElementById(
+      "adminDealCategory"
+    );
+
+  select.innerHTML = "";
+
+  CATEGORIES.forEach(function (category) {
+    const option =
+      document.createElement("option");
+
+    option.value =
+      category.id;
+
+    option.textContent =
+      category.fr;
+
+    select.appendChild(option);
+  });
+}
+
+function renderAdmin() {
+  document.getElementById(
+    "adminStatDeals"
+  ).textContent =
+    DEALS.length;
+
+  document.getElementById(
+    "adminStatCategories"
+  ).textContent =
+    CATEGORIES.length;
+
+  document.getElementById(
+    "adminStatFavorites"
+  ).textContent =
+    state.favorites.length;
+
+  document.getElementById(
+    "adminStatAlerts"
+  ).textContent =
+    state.alerts.length;
+
+  const tbody =
+    document.getElementById(
+      "adminDealsBody"
+    );
+
+  tbody.innerHTML = "";
+
+  DEALS.forEach(function (deal) {
+    const row =
+      document.createElement("tr");
+
+    row.innerHTML = `
+      <td>
+        <strong>
+          ${escapeHTML(deal.name)}
+        </strong>
+      </td>
+
+      <td>
+        ${escapeHTML(
+          categoryName(deal.category)
+        )}
+      </td>
+
+      <td>
+        ${escapeHTML(deal.store)}
+      </td>
+
+      <td>
+        ${money(deal.price)}
+      </td>
+
+      <td>
+        ${discount(deal)}%
+      </td>
+
+      <td>
+        ${deal.score}/100
+      </td>
+
+      <td>
+        <span class="admin-badge">
+          ${escapeHTML(
+            availabilityText(
+              deal.availability
+            )
+          )}
+        </span>
+      </td>
+
+      <td>
+        <div class="admin-actions">
+
+          <button
+            type="button"
+            class="btn ghost small"
+            data-admin-edit="${deal.id}"
+          >
+            Modifier
+          </button>
+
+          <button
+            type="button"
+            class="btn ghost small"
+            data-admin-delete="${deal.id}"
+          >
+            Supprimer
+          </button>
+
+        </div>
+      </td>
+    `;
+
+    tbody.appendChild(row);
+  });
+
+  tbody
+    .querySelectorAll(
+      "[data-admin-edit]"
+    )
+    .forEach(function (button) {
+      button.addEventListener(
+        "click",
+        function () {
+          openAdminDealEditor(
+            Number(
+              button.getAttribute(
+                "data-admin-edit"
+              )
+            )
+          );
+        }
+      );
+    });
+
+  tbody
+    .querySelectorAll(
+      "[data-admin-delete]"
+    )
+    .forEach(function (button) {
+      button.addEventListener(
+        "click",
+        function () {
+          deleteAdminDeal(
+            Number(
+              button.getAttribute(
+                "data-admin-delete"
+              )
+            )
+          );
+        }
+      );
+    });
+}
+
+function openAdminDealEditor(id) {
+  populateAdminCategories();
+
+  const deal =
+    id ? getDeal(id) : null;
+
+  document.getElementById(
+    "adminDealTitle"
+  ).textContent =
+    deal
+      ? "Modifier l'offre"
+      : "Ajouter une offre";
+
+  document.getElementById(
+    "adminDealId"
+  ).value =
+    deal ? deal.id : "";
+
+  document.getElementById(
+    "adminDealName"
+  ).value =
+    deal ? deal.name : "";
+
+  document.getElementById(
+    "adminDealCategory"
+  ).value =
+    deal
+      ? deal.category
+      : CATEGORIES[0].id;
+
+  document.getElementById(
+    "adminDealStore"
+  ).value =
+    deal ? deal.store : "";
+
+  document.getElementById(
+    "adminDealPrice"
+  ).value =
+    deal ? deal.price : "";
+
+  document.getElementById(
+    "adminDealOldPrice"
+  ).value =
+    deal ? deal.oldPrice : "";
+
+  document.getElementById(
+    "adminDealScore"
+  ).value =
+    deal ? deal.score : 70;
+
+  document.getElementById(
+    "adminDealAvailability"
+  ).value =
+    deal
+      ? deal.availability
+      : "available";
+
+  document.getElementById(
+    "adminDealUrl"
+  ).value =
+    deal
+      ? deal.affiliateUrl || ""
+      : "";
+
+  document.getElementById(
+    "adminDealDescription"
+  ).value =
+    deal
+      ? deal.description
+      : "";
+
+  openModal(
+    adminDealModal
+  );
+}
+
+function deleteAdminDeal(id) {
+  const deal =
+    getDeal(id);
+
+  if (!deal) {
+    return;
+  }
+
+  const confirmed =
+    window.confirm(
+      'Supprimer "' +
+      deal.name +
+      '" du catalogue ?'
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  DEALS =
+    DEALS.filter(function (item) {
+      return item.id !== id;
+    });
+
+  state.favorites =
+    state.favorites.filter(
+      function (favoriteId) {
+        return favoriteId !== id;
+      }
+    );
+
+  state.compare =
+    state.compare.filter(
+      function (compareId) {
+        return compareId !== id;
+      }
+    );
+
+  state.alerts =
+    state.alerts.filter(
+      function (alert) {
+        return (
+          alert.productId !== id
+        );
+      }
+    );
+
+  saveAdminDeals();
+  saveState();
+
+  renderAdmin();
+
+  showToast(
+    "Offre supprimée."
+  );
+}
+
+document.getElementById(
+  "adminAddDeal"
+).addEventListener(
+  "click",
+  function () {
+    openAdminDealEditor(null);
+  }
+);
+
+document.getElementById(
+  "closeAdminDealModal"
+).addEventListener(
+  "click",
+  function () {
+    closeModal(
+      adminDealModal
+    );
+  }
+);
+
+document.getElementById(
+  "cancelAdminDeal"
+).addEventListener(
+  "click",
+  function () {
+    closeModal(
+      adminDealModal
+    );
+  }
+);
+
+adminDealForm.addEventListener(
+  "submit",
+  function (event) {
+    event.preventDefault();
+
+    const id =
+      Number(
+        document.getElementById(
+          "adminDealId"
+        ).value
+      );
+
+    const name =
+      document.getElementById(
+        "adminDealName"
+      ).value.trim();
+
+    const category =
+      document.getElementById(
+        "adminDealCategory"
+      ).value;
+
+    const store =
+      document.getElementById(
+        "adminDealStore"
+      ).value.trim();
+
+    const price =
+      Number(
+        document.getElementById(
+          "adminDealPrice"
+        ).value
+      );
+
+    const oldPrice =
+      Number(
+        document.getElementById(
+          "adminDealOldPrice"
+        ).value
+      );
+
+    const score =
+      Number(
+        document.getElementById(
+          "adminDealScore"
+        ).value
+      );
+
+    const availability =
+      document.getElementById(
+        "adminDealAvailability"
+      ).value;
+
+    const affiliateUrl =
+      document.getElementById(
+        "adminDealUrl"
+      ).value.trim();
+
+    const description =
+      document.getElementById(
+        "adminDealDescription"
+      ).value.trim();
+
+    if (
+      !name ||
+      !category ||
+      !store ||
+      !Number.isFinite(price) ||
+      price < 0 ||
+      !Number.isFinite(oldPrice) ||
+      oldPrice < 0 ||
+      !Number.isFinite(score) ||
+      score < 0 ||
+      score > 100 ||
+      !description
+    ) {
+      showToast(
+        "Vérifiez les informations de l'offre."
+      );
+
+      return;
+    }
+
+    if (id) {
+      const existing =
+        getDeal(id);
+
+      if (!existing) {
+        showToast(
+          "Offre introuvable."
         );
 
-      if (typing) {
         return;
       }
 
-      if (
-        event.key !== "d" &&
-        event.key !== "D"
-      ) {
-        firstDPress = 0;
-        return;
-      }
+      Object.assign(
+        existing,
+        {
+          name: name,
+          category: category,
+          store: store,
+          price: price,
+          oldPrice: oldPrice,
+          score: score,
+          availability:
+            availability,
+          description:
+            description,
+          affiliateUrl:
+            affiliateUrl
+        }
+      );
+    } else {
+      const nextId =
+        DEALS.length
+          ? Math.max.apply(
+              null,
+              DEALS.map(function (deal) {
+                return deal.id;
+              })
+            ) + 1
+          : 1;
 
-      const now =
-        Date.now();
-
-      if (
-        firstDPress &&
-        now - firstDPress <
-          600
-      ) {
-        firstDPress = 0;
-
-        adminGateway();
-
-        return;
-      }
-
-      firstDPress = now;
+      DEALS.push({
+        id: nextId,
+        name: name,
+        category: category,
+        store: store,
+        price: price,
+        oldPrice: oldPrice,
+        score: score,
+        availability:
+          availability,
+        description:
+          description,
+        affiliateUrl:
+          affiliateUrl,
+        addedAt:
+          new Date()
+            .toISOString()
+            .slice(0, 10)
+      });
     }
-  );
 
+    saveAdminDeals();
+
+    closeModal(
+      adminDealModal
+    );
+
+    renderAdmin();
+    populateFilters();
+
+    showToast(
+      id
+        ? "Offre mise à jour."
+        : "Offre ajoutée."
+    );
+  }
+);
   /* =========================================================
      REFRESH
   ========================================================== */
@@ -7019,10 +8007,14 @@
     ) {
       renderAlerts();
     } else if (
-      page === "profile"
-    ) {
-      renderProfile();
-    }
+  page === "profile"
+) {
+  renderProfile();
+} else if (
+  page === "admin"
+) {
+  renderAdmin();
+}
   }
 
   /* =========================================================
