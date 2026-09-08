@@ -7647,16 +7647,55 @@ function populateAdminCategories() {
   });
 }
 
-function renderAdmin() {
+async function renderAdmin() {
+  try {
+    const {
+      data: { user },
+      error
+    } = await db.auth.getUser();
+
+    if (error || !user) {
+      currentSession = null;
+      currentUser = null;
+      currentProfile = null;
+
+      showToast(
+        state.lang === "en"
+          ? "Administrator access required."
+          : "Accès administrateur requis."
+      );
+
+      updateHash("home");
+      return;
+    }
+
+    currentUser = user;
+
+    await loadSupabaseProfile(user.id);
+
     if (
-    !currentUser ||
-    !currentProfile ||
-    currentProfile.role !== "admin"
-  ) {
-    showToast(
-      state.lang === "en"
-        ? "Administrator access required."
-        : "Accès administrateur requis."
+      !currentProfile ||
+      currentProfile.role !== "admin"
+    ) {
+      showToast(
+        state.lang === "en"
+          ? "Administrator access required."
+          : "Accès administrateur requis."
+      );
+
+      updateHash("home");
+      return;
+    }
+
+    console.log(
+      "DealBot — Admin access granted:",
+      currentUser.email
+    );
+
+  } catch (error) {
+    console.error(
+      "DealBot — Admin verification error:",
+      error
     );
 
     updateHash("home");
