@@ -3965,7 +3965,7 @@
     try {
       const { data, error } = await db
         .from("categories")
-        .select("id, name")
+        .select("*")
         .limit(1);
 
       if (error) {
