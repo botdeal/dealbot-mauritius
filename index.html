@@ -4315,6 +4315,178 @@
       affiliateUrl: ""
     }
   ];
+  async function loadCatalogFromSupabase() {
+  try {
+    const [
+      dealsResult,
+      categoriesResult,
+      merchantsResult
+    ] = await Promise.all([
+      db.from("deals").select("*"),
+      db.from("categories").select("*"),
+      db.from("merchants").select("*")
+    ]);
+
+    if (dealsResult.error) {
+      throw dealsResult.error;
+    }
+
+    if (categoriesResult.error) {
+      throw categoriesResult.error;
+    }
+
+    if (merchantsResult.error) {
+      throw merchantsResult.error;
+    }
+
+    const supabaseDeals =
+      dealsResult.data || [];
+
+    const supabaseCategories =
+      categoriesResult.data || [];
+
+    const supabaseMerchants =
+      merchantsResult.data || [];
+
+    const merchantMap = new Map(
+      supabaseMerchants.map(function (merchant) {
+        return [
+          merchant.id,
+          merchant
+        ];
+      })
+    );
+
+    const categoryMap = new Map(
+      supabaseCategories.map(function (category) {
+        return [
+          category.id,
+          category
+        ];
+      })
+    );
+
+    if (supabaseCategories.length) {
+      CATEGORIES.splice(
+        0,
+        CATEGORIES.length,
+        ...supabaseCategories
+          .filter(function (category) {
+            return category.is_active !== false;
+          })
+          .sort(function (a, b) {
+            return (
+              (a.sort_order || 0) -
+              (b.sort_order || 0)
+            );
+          })
+          .map(function (category) {
+            return {
+              id: category.slug,
+              fr:
+                category.name_fr ||
+                category.slug,
+              en:
+                category.name_en ||
+                category.name_fr ||
+                category.slug
+            };
+          })
+      );
+    }
+
+    if (supabaseDeals.length) {
+      DEALS = supabaseDeals.map(function (deal) {
+        const merchant =
+          merchantMap.get(
+            deal.merchant_id
+          );
+
+        const category =
+          categoryMap.get(
+            deal.category_id
+          );
+
+        return {
+          id: Number(deal.id),
+          name: deal.name,
+          category:
+            category?.slug ||
+            "technology",
+          store:
+            merchant?.name ||
+            "Partenaire DealBot",
+          price:
+            Number(deal.price || 0),
+          oldPrice:
+            Number(
+              deal.old_price ||
+              deal.price ||
+              0
+            ),
+          score:
+            Number(
+              deal.dealbot_score || 0
+            ),
+          availability:
+            deal.availability ||
+            "available",
+          description:
+            deal.description ||
+            deal.short_description ||
+            "",
+          addedAt:
+            deal.created_at
+              ? deal.created_at.slice(
+                  0,
+                  10
+                )
+              : "",
+          affiliateUrl:
+            deal.affiliate_url ||
+            deal.original_url ||
+            "",
+          imageUrl:
+            deal.image_url || "",
+          currency:
+            deal.currency || "MUR",
+          featured:
+            Boolean(
+              deal.is_featured
+            )
+        };
+      });
+
+      console.log(
+        "DealBot — Supabase catalog loaded:",
+        {
+          deals: DEALS.length,
+          categories:
+            CATEGORIES.length,
+          merchants:
+            supabaseMerchants.length
+        }
+      );
+    } else {
+      console.log(
+        "DealBot — Supabase has no deals yet. Static catalog kept."
+      );
+    }
+
+    refreshCurrentPage();
+
+  } catch (error) {
+    console.error(
+      "DealBot — Catalog loading error:",
+      error
+    );
+
+    console.log(
+      "DealBot — Static catalog fallback active."
+    );
+  }
+}
+  loadCatalogFromSupabase();
 const storedAdminDeals = safeParse(
   localStorage.getItem(STORAGE.adminDeals),
   null
