@@ -1846,6 +1846,8 @@
       }
     }
   </style>
+  <!-- Supabase JavaScript Client -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -3948,7 +3950,42 @@
   <script>
 (function () {
   "use strict";
+  /* =========================================================
+     SUPABASE — CONFIGURATION
+  ========================================================== */
 
+  const SUPABASE_URL = "https://rrcxlohsbxfldflqfgqx.supabase.co";
+  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable__EqQ0t_cPDXO-bmsHzWERA_ZLAHck9d";
+
+  const db = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+  );
+    async function testSupabaseConnection() {
+    try {
+      const { data, error } = await db
+        .from("categories")
+        .select("id, name")
+        .limit(1);
+
+      if (error) {
+        console.error("DealBot — Supabase connection error:", error);
+        return;
+      }
+
+      console.log(
+        "DealBot — Supabase connected successfully.",
+        data
+      );
+    } catch (error) {
+      console.error(
+        "DealBot — Supabase unavailable:",
+        error
+      );
+    }
+  }
+
+  testSupabaseConnection();
   /* =========================================================
      DEALBOT — FRONTEND CORE
      Version statique avant connexion Supabase / Admitad
