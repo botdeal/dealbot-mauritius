@@ -3990,7 +3990,70 @@
      DEALBOT — FRONTEND CORE
      Version statique avant connexion Supabase / Admitad
   ========================================================== */
+  /* =========================================================
+     SUPABASE — AUTHENTICATION
+  ========================================================== */
 
+  let currentSession = null;
+  let currentUser = null;
+  let currentProfile = null;
+
+  async function loadSupabaseProfile(userId) {
+    const { data, error } = await db
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    if (error) {
+      console.error("DealBot — Profile error:", error);
+      currentProfile = null;
+      return null;
+    }
+
+    currentProfile = data;
+    return data;
+  }
+
+  async function initializeSupabaseAuth() {
+    try {
+      const {
+        data: { session },
+        error
+      } = await db.auth.getSession();
+
+      if (error) {
+        console.error("DealBot — Session error:", error);
+        return;
+      }
+
+      currentSession = session;
+      currentUser = session?.user ?? null;
+
+      if (currentUser) {
+        await loadSupabaseProfile(currentUser.id);
+
+        console.log("DealBot — Authenticated:", {
+          email: currentUser.email,
+          role: currentProfile?.role ?? "unknown"
+        });
+      } else {
+        currentProfile = null;
+        console.log("DealBot — Visitor session");
+      }
+    } catch (error) {
+      console.error("DealBot — Auth initialization error:", error);
+    }
+  }
+
+  db.auth.onAuthStateChange((event, session) => {
+    currentSession = session;
+    currentUser = session?.user ?? null;
+
+    console.log("DealBot — Auth event:", event);
+  });
+
+  initializeSupabaseAuth();
   const STORAGE = {
   favorites: "dealbot_favorites_v2",
   compare: "dealbot_compare_v2",
