@@ -4064,9 +4064,9 @@
   compare: "dealbot_compare_v2",
   alerts: "dealbot_alerts_v2",
   language: "dealbot_language_v2",
-  demoUser: "dealbot_demo_user_v2",
   adminDeals: "dealbot_admin_deals_v2"
 };
+
 
   const MAX_COMPARE = 4;
   const DEALS_PER_PAGE = 8;
@@ -4353,11 +4353,6 @@ function saveAdminDeals() {
     alerts: safeParse(
       localStorage.getItem(STORAGE.alerts),
       []
-    ),
-
-    demoUser: safeParse(
-      localStorage.getItem(STORAGE.demoUser),
-      null
     ),
 
     visibleDeals: DEALS_PER_PAGE,
@@ -7165,31 +7160,25 @@ if (page === "admin") {
     }
   );
 
-  document
-    .getElementById(
-      "signupForm"
-    )
+    document
+    .getElementById("signupForm")
     .addEventListener(
       "submit",
-      function (event) {
+      async function (event) {
         event.preventDefault();
 
-        const name =
-          document.getElementById(
-            "signupName"
-          ).value.trim();
+        const name = document
+          .getElementById("signupName")
+          .value.trim();
 
-        const email =
-          document.getElementById(
-            "signupEmail"
-          ).value
-            .trim()
-            .toLowerCase();
+        const email = document
+          .getElementById("signupEmail")
+          .value.trim()
+          .toLowerCase();
 
-        const password =
-          document.getElementById(
-            "signupPassword"
-          ).value;
+        const password = document
+          .getElementById("signupPassword")
+          .value;
 
         if (
           !name ||
@@ -7201,113 +7190,171 @@ if (page === "admin") {
               ? "Please check the entered information."
               : "Vérifiez les informations saisies."
           );
-
           return;
         }
 
-        /*
-          IMPORTANT:
-          On ne stocke PAS le mot de passe.
+        const { data, error } =
+          await db.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                full_name: name
+              }
+            }
+          });
 
-          Ce compte est uniquement une simulation
-          visuelle temporaire en attendant Supabase Auth.
-        */
+        if (error) {
+          console.error(
+            "DealBot — Signup error:",
+            error
+          );
 
-        state.demoUser = {
-          name: name,
-          email: email
-        };
-
-        localStorage.setItem(
-          STORAGE.demoUser,
-          JSON.stringify(
-            state.demoUser
-          )
-        );
-
-        updateAccountUI();
-
-        closeModal(
-          signupModal
-        );
-
-        event.target.reset();
-
-        showToast(
-          state.lang === "en"
-            ? "Demo profile created."
-            : "Profil de démonstration créé."
-        );
-      }
-    );
-
-  document
-    .getElementById(
-      "loginForm"
-    )
-    .addEventListener(
-      "submit",
-      function (event) {
-        event.preventDefault();
-
-        /*
-          Aucun vrai login ne doit être simulé
-          avec un mot de passe stocké côté navigateur.
-
-          Jusqu'à Supabase :
-          si un profil démo existe, on le réactive.
-        */
-
-        if (!state.demoUser) {
           showToast(
             state.lang === "en"
-              ? "Create a demo profile first. Secure authentication will be connected later."
-              : "Créez d'abord un profil de démonstration. L'authentification sécurisée sera connectée ensuite."
+              ? error.message
+              : "Impossible de créer le compte : " +
+                error.message
           );
 
           return;
         }
 
+        event.target.reset();
+        closeModal(signupModal);
+
+        if (data.session) {
+          currentSession = data.session;
+          currentUser = data.user;
+
+          await loadSupabaseProfile(
+            data.user.id
+          );
+
+          updateAccountUI();
+
+          showToast(
+            state.lang === "en"
+              ? "Account created and connected."
+              : "Compte créé et connecté."
+          );
+        } else {
+          showToast(
+            state.lang === "en"
+              ? "Account created. Check your email to confirm your address."
+              : "Compte créé. Vérifiez votre email pour confirmer votre adresse."
+          );
+        }
+      }
+    );
+  document
+    .getElementById("loginForm")
+    .addEventListener(
+      "submit",
+      async function (event) {
+        event.preventDefault();
+
+        const email = document
+          .getElementById("loginEmail")
+          .value.trim()
+          .toLowerCase();
+
+        const password = document
+          .getElementById("loginPassword")
+          .value;
+
+        if (!email || !password) {
+          showToast(
+            state.lang === "en"
+              ? "Enter your email and password."
+              : "Entrez votre email et votre mot de passe."
+          );
+          return;
+        }
+
+        const { data, error } =
+          await db.auth.signInWithPassword({
+            email,
+            password
+          });
+
+        if (error) {
+          console.error(
+            "DealBot — Login error:",
+            error
+          );
+
+          showToast(
+            state.lang === "en"
+              ? "Unable to sign in: " + error.message
+              : "Connexion impossible : " + error.message
+          );
+
+          return;
+        }
+
+        currentSession = data.session;
+        currentUser = data.user;
+
+        await loadSupabaseProfile(
+          data.user.id
+        );
+
+        event.target.reset();
         closeModal(loginModal);
 
         updateAccountUI();
 
         showToast(
           state.lang === "en"
-            ? "Demo profile active."
-            : "Profil de démonstration actif."
+            ? "Signed in successfully."
+            : "Connexion réussie."
+        );
+
+        console.log(
+          "DealBot — User connected:",
+          {
+            email: currentUser.email,
+            role: currentProfile?.role ?? "unknown"
+          }
         );
       }
     );
 
-  function logout() {
-    state.demoUser = null;
+  async function logout() {
+  const { error } = await db.auth.signOut();
 
-    localStorage.removeItem(
-      STORAGE.demoUser
+  if (error) {
+    console.error(
+      "DealBot — Logout error:",
+      error
     );
-
-    updateAccountUI();
 
     showToast(
       state.lang === "en"
-        ? "Logged out."
-        : "Déconnecté."
+        ? "Unable to sign out."
+        : "Impossible de se déconnecter."
     );
 
-    if (
-      document
-        .getElementById(
-          "page-profile"
-        )
-        .classList.contains(
-          "active"
-        )
-    ) {
-      updateHash("home");
-    }
+    return;
   }
 
+  currentSession = null;
+  currentUser = null;
+  currentProfile = null;
+
+  updateAccountUI();
+
+  showToast(
+    state.lang === "en"
+      ? "Logged out."
+      : "Déconnexion réussie."
+  );
+
+  console.log(
+    "DealBot — User disconnected"
+  );
+}
   document
     .getElementById(
       "logoutButton"
@@ -7318,29 +7365,33 @@ if (page === "admin") {
     );
 
   function updateAccountUI() {
-    const guest =
-      document.getElementById(
-        "guestActions"
-      );
+  const guest =
+    document.getElementById("guestActions");
 
-    const account =
-      document.getElementById(
-        "accountBox"
-      );
+  const account =
+    document.getElementById("accountBox");
 
-    if (state.demoUser) {
-      guest.hidden = true;
-      account.hidden = false;
+  const accountButton =
+    document.getElementById("accountButton");
 
-      document.getElementById(
-        "accountButton"
-      ).textContent =
-        state.demoUser.name;
-    } else {
-      guest.hidden = false;
-      account.hidden = true;
-    }
+  if (currentUser) {
+    guest.hidden = true;
+    account.hidden = false;
 
+    accountButton.textContent =
+      currentProfile?.full_name ||
+      currentUser.email ||
+      "Mon compte";
+  } else {
+    guest.hidden = false;
+    account.hidden = true;
+
+    accountButton.textContent =
+      state.lang === "en"
+        ? "My account"
+        : "Mon compte";
+  }
+}
     renderProfile();
   }
 
@@ -7396,30 +7447,29 @@ if (page === "admin") {
   );
 
   function renderProfile() {
-    document.getElementById(
-      "profileName"
-    ).textContent =
-      state.demoUser
-        ? state.demoUser.name
-        : "—";
+  document.getElementById(
+    "profileName"
+  ).textContent =
+    currentProfile?.full_name ||
+    currentUser?.email ||
+    "—";
 
-    document.getElementById(
-      "profileEmail"
-    ).textContent =
-      state.demoUser
-        ? state.demoUser.email
-        : "—";
+  document.getElementById(
+    "profileEmail"
+  ).textContent =
+    currentUser?.email ||
+    "—";
 
-    document.getElementById(
-      "profileFavorites"
-    ).textContent =
-      state.favorites.length;
+  document.getElementById(
+    "profileFavorites"
+  ).textContent =
+    state.favorites.length;
 
-    document.getElementById(
-      "profileAlerts"
-    ).textContent =
-      state.alerts.length;
-  }
+  document.getElementById(
+    "profileAlerts"
+  ).textContent =
+    state.alerts.length;
+}
 
   /* =========================================================
      CONTACT
