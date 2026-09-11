@@ -207,3 +207,44 @@ test('catalog refresh invalidates a comparison after a currency change',async()=
   assert.equal(w.document.getElementById('runCompare').disabled,true);
   assert.equal(w.document.getElementById('compareResults').hidden,true);dom.window.close();
 });
+
+test('normalization keeps merchant and affiliate URLs independently editable',()=>{
+  const result=backend.normalizeDeal({...raw,affiliate_url:'https://affiliate.example/offer'},[],categories);
+  assert.equal(result.originalUrl,'https://example.com/product');
+  assert.equal(result.affiliateOverride,'https://affiliate.example/offer');
+  assert.equal(result.affiliateUrl,'https://affiliate.example/offer');
+  assert.equal(deal.affiliateOverride,'');
+});
+
+test('admin saves separate links, scheduled dates and featured status',async()=>{
+  const {dom,w,calls}=await setup({user:'admin-one',role:'admin',hash:'#admin'});
+  w.document.querySelector('[data-admin-edit]').click();
+  assert.equal(w.document.getElementById('adminDealUrl').value,'https://example.com/product');
+  assert.equal(w.document.getElementById('adminDealAffiliate').value,'');
+  w.document.getElementById('adminDealAffiliate').value='https://affiliate.example/offer';
+  w.document.getElementById('adminDealStart').value='2030-01-01T08:00';
+  w.document.getElementById('adminDealExpiry').value='2030-01-02T08:00';
+  w.document.getElementById('adminDealFeatured').checked=true;
+  w.document.getElementById('adminDealForm').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));await delay();
+  assert.equal(calls[0][1].url,'https://example.com/product');
+  assert.equal(calls[0][1].affiliateUrl,'https://affiliate.example/offer');
+  assert.equal(calls[0][1].startsAt,'2030-01-01T08:00:00.000Z');
+  assert.equal(calls[0][1].featured,true);dom.window.close();
+});
+
+test('admin refuses reversed publication dates before saving',async()=>{
+  const {dom,w,calls}=await setup({user:'admin-one',role:'admin',hash:'#admin'});
+  w.document.querySelector('[data-admin-edit]').click();
+  w.document.getElementById('adminDealStart').value='2030-01-02T08:00';
+  w.document.getElementById('adminDealExpiry').value='2030-01-01T08:00';
+  w.document.getElementById('adminDealForm').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));await delay();
+  assert.equal(calls.length,0);assert.match(w.document.getElementById('toast').textContent,/après le début/);dom.window.close();
+});
+
+test('home prioritizes offers explicitly featured by the admin',async()=>{
+  const {dom,w,api}=await setup();
+  api.catalog=async()=>({deals:[deal,{...deal,id:12,name:'Featured offer',score:1,featured:true}],categories,merchants:[]});
+  Object.defineProperty(w.document,'hidden',{configurable:true,value:false});
+  w.document.dispatchEvent(new w.Event('visibilitychange'));await delay();
+  assert.match(w.document.querySelector('#featuredDeals .product-card').textContent,/Featured offer/);dom.window.close();
+});

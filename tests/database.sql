@@ -93,7 +93,8 @@ end $$;
 select set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('dealbot.test')::jsonb->>'admin','role','authenticated')::text,true);
 set local role authenticated;
 do $$
-declare saved_id bigint; c text;
+declare saved_id bigint; c text; p jsonb; t jsonb := current_setting('dealbot.test')::jsonb;
+  d bigint := (t->>'deal')::bigint; invalid_link text;
 begin
   select slug into c from public.categories where is_active limit 1;
   saved_id := public.admin_save_deal(jsonb_build_object('name','Admin test','store','Transaction merchant','category',c,'price',50,'oldPrice',70,'score',60,'availability','in_stock','currency','MUR','url','https://example.com/product','status','active'));
@@ -101,6 +102,30 @@ begin
   if not exists(select 1 from public.admin_audit_logs where entity_id=saved_id::text and entity_type='deals') then raise exception 'Audit missing'; end if;
   update public.deals set status='archived' where deals.id=saved_id;
   if not exists(select 1 from public.price_history where deal_id=saved_id) then raise exception 'Archive removed history'; end if;
+  p := jsonb_build_object('id',d,'name','Edited offer','store','Transaction test','category',c,'price',70,'oldPrice',100,
+    'score',60,'availability','in_stock','currency','MUR','url','https://example.com/updated','status','active');
+  perform public.admin_save_deal(p||jsonb_build_object('affiliateUrl','https://example.com/affiliate'));
+  if (select merchant_id from public.deals where id=d) <> (t->>'merchant')::bigint then raise exception 'Existing merchant identity replaced'; end if;
+  if public.track_deal_click(d,'admin-regression-session','deal') <> 'https://example.com/affiliate' then raise exception 'Edited affiliate destination ignored'; end if;
+  foreach invalid_link in array array['javascript:alert(1)','https://user:pass@example.com/product','https://example.com:bad/product','https://example.com/a b','https://example.com'||chr(92)||'@evil.com'] loop
+    begin
+      perform public.admin_save_deal(p||jsonb_build_object('affiliateUrl',invalid_link));
+      raise exception 'Invalid affiliate URL accepted';
+    exception when invalid_parameter_value then null; end;
+  end loop;
+  begin
+    perform public.admin_save_deal(p||jsonb_build_object('startsAt',now()+interval '2 days','expiresAt',now()+interval '1 day'));
+    raise exception 'Reversed publication window accepted';
+  exception when invalid_parameter_value then null; end;
+  perform public.admin_save_deal(p||jsonb_build_object('startsAt',now()+interval '1 day','featured',true));
+  perform public.admin_save_deal(p); -- old clients must preserve new optional fields
+  if not (select is_featured and starts_at>now() and affiliate_url='https://example.com/affiliate' from public.deals where id=d) then raise exception 'Legacy edit cleared optional fields'; end if;
+  begin
+    perform public.track_deal_click(d,'admin-regression-session','deal');
+    raise exception 'Scheduled offer tracked before publication';
+  exception when invalid_parameter_value then null; end;
+  perform public.admin_save_deal(p||jsonb_build_object('affiliateUrl','','startsAt',null,'featured',false));
+  if public.track_deal_click(d,'admin-regression-session','deal') <> 'https://example.com/updated' then raise exception 'Cleared affiliate still overrides merchant link'; end if;
 end $$;
 reset role;
 update public.deals set currency='EUR' where id=(current_setting('dealbot.test')::jsonb->>'deal')::bigint;

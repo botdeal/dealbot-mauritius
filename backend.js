@@ -20,6 +20,7 @@
       score: Number(deal.dealbot_score), availability: ({in_stock:'available', out_of_stock:'outofstock',limited:'limited'})[deal.availability] || 'unknown',
       description: deal.description || deal.short_description || '', addedAt: (deal.created_at || '').slice(0,10),
       affiliateUrl: safeUrl(deal.affiliate_url || deal.original_url), originalUrl: safeUrl(deal.original_url),
+      affiliateOverride: safeUrl(deal.affiliate_url),
       imageUrl: safeUrl(deal.image_url), currency: deal.currency || 'MUR', featured: !!deal.is_featured,
       status: deal.status, published: isPublished(deal), verified: !!merchant?.is_verified,
       expiresAt: deal.expires_at, startsAt: deal.starts_at

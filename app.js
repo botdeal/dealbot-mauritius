@@ -914,7 +914,7 @@ if (page === "admin") {
       DEALS
         .slice()
         .sort(function (a, b) {
-          return b.score - a.score;
+          return Number(b.featured) - Number(a.featured) || b.score - a.score;
         })
         .slice(0, 4);
 
@@ -3602,7 +3602,7 @@ function openAdminDealEditor(id) {
     "adminDealUrl"
   ).value =
     deal
-      ? deal.affiliateUrl || ""
+      ? deal.originalUrl || ""
       : "";
 
   document.getElementById(
@@ -3615,6 +3615,9 @@ function openAdminDealEditor(id) {
   document.getElementById('adminDealStatus').value = deal?.status || 'draft';
   document.getElementById('adminDealCurrency').value = deal?.currency || 'MUR';
   document.getElementById('adminDealImage').value = deal?.imageUrl || '';
+  document.getElementById('adminDealAffiliate').value = deal?.affiliateOverride || '';
+  document.getElementById('adminDealStart').value = deal?.startsAt ? new Date(deal.startsAt).toISOString().slice(0,16) : '';
+  document.getElementById('adminDealFeatured').checked = !!deal?.featured;
   document.getElementById('adminDealExpiry').value = deal?.expiresAt ? new Date(deal.expiresAt).toISOString().slice(0,16) : '';
   openModal(
     adminDealModal
@@ -3664,14 +3667,18 @@ adminDealForm.addEventListener('submit', async function(event) {
   if (currentProfile?.role !== 'admin') { showToast('Accès administrateur requis.'); return; }
   const value = id => document.getElementById(id).value.trim();
   const url = value('adminDealUrl'), image = value('adminDealImage');
-  if ((url && !window.DealBotBackend.safeUrl(url)) || (image && !window.DealBotBackend.safeUrl(image))) { showToast('Utilisez une URL HTTPS valide.'); return; }
+  const affiliateUrl = value('adminDealAffiliate');
+  if ([url,image,affiliateUrl].some(link => link && !window.DealBotBackend.safeUrl(link))) { showToast('Utilisez une URL HTTPS valide.'); return; }
+  const startsAt = value('adminDealStart') ? new Date(value('adminDealStart')+'Z').toISOString() : null;
+  const expiresAt = value('adminDealExpiry') ? new Date(value('adminDealExpiry')+'Z').toISOString() : null;
+  if (startsAt && expiresAt && startsAt >= expiresAt) { showToast('L’expiration doit être après le début de publication.'); return; }
   const button = adminDealForm.querySelector('[type=submit]'); button.disabled = true;
   try {
     await api.saveDeal({id:value('adminDealId') || null,name:value('adminDealName'),store:value('adminDealStore'),
       category:value('adminDealCategory'),price:Number(value('adminDealPrice')),oldPrice:Number(value('adminDealOldPrice')),
       score:Number(value('adminDealScore')),availability:({available:'in_stock',outofstock:'out_of_stock',limited:'limited',unknown:'unknown'})[value('adminDealAvailability')],
       description:value('adminDealDescription'),url,currency:value('adminDealCurrency'),status:value('adminDealStatus'),imageUrl:image,
-      expiresAt:value('adminDealExpiry') ? new Date(value('adminDealExpiry')+'Z').toISOString() : null});
+      affiliateUrl,startsAt,expiresAt,featured:document.getElementById('adminDealFeatured').checked});
     closeModal(adminDealModal);
     await loadCatalogFromSupabase();
     showToast('Offre enregistrée dans Supabase.');

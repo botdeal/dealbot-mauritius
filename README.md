@@ -24,6 +24,8 @@ Projet : `rrcxlohsbxfldflqfgqx`. Les scripts suivants ont été appliqués, dans
 3. `supabase/alert_integrity.sql` — `dealbot_alert_integrity`.
 4. `supabase/migrations/20260909101046_dealbot_alert_currency.sql` — `dealbot_alert_currency`, ajoutée après `09b818a` : actualisation de la devise à la réédition d’une alerte, même à montant identique. Une alerte portant explicitement une ancienne devise est conservée lors d’une autre sauvegarde. L’ancien format de requête de `09b818a` reste accepté.
 
+5. `supabase/migrations/20260911222123_dealbot_admin_offer_integrity.sql` — `dealbot_admin_offer_integrity` : conservation du vendeur existant, liens indépendants, dates et mise en avant.
+
 Ne pas les rejouer sur ce projet : les migrations sont déjà enregistrées. Le dépôt initial ne contenait pas de migration du schéma de base; ces scripts complètent ce schéma et ne créent pas un nouveau projet.
 
 RLS maintenues sur toutes les tables exposées; suppression des privilèges TRUNCATE/REFERENCES/TRIGGER inutiles; modification des rôles refusée au client; fonctions privilégiées auxiliaires isolées dans `private`; statut de déclenchement des alertes réservé au serveur.
@@ -32,7 +34,7 @@ RLS maintenues sur toutes les tables exposées; suppression des privilèges TRUN
 
 ## Vérification effectuée
 
-- `npm ci --ignore-scripts` puis `npm test` : 22 tests d'interface et de logique passent. JSDOM et un backend simulé vérifient les interactions; ces tests ne constituent pas un contrôle visuel dans Chrome ni une validation des emails réels.
+- `npm ci --ignore-scripts` puis `npm test` : 26 tests d'interface et de logique passent. JSDOM et un backend simulé vérifient les interactions; ces tests ne constituent pas un contrôle visuel dans Chrome ni une validation des emails réels.
 - `tests/database.sql` exécuté sur Supabase : isolation entre comptes, refus d'accès admin et de changement de rôle, édition du profil, sauvegarde atomique, comparaison, redirection, expiration, déclenchement d'alerte, historique, archivage, audit et limite de contact. Toutes les données de test sont annulées par ROLLBACK.
 - `python tests/rest-smoke.py` : six appels réels en lecture seule à l'API publique passent. Les données privées ne sont pas exposées au visiteur.
 - Analyse syntaxique Node de `app.js` et `backend.js`.
@@ -76,3 +78,11 @@ Le connecteur GitHub a transféré la référence `7037dbc` sur `supabase-integr
 La suite rend supprimables les favoris et comparaisons d’offres absentes du catalogue, désactive la comparaison lorsque la sélection est incomplète ou mélange les devises, et actualise le tableau après changement de sélection ou de catalogue. Trois tests de régression supplémentaires passent. Aucune migration supplémentaire n’est nécessaire.
 
 GitHub rapporte un statut Vercel réussi pour `9596e4d` (déploiement automatique existant). Le connecteur Vercel retourne encore 403 pour l’espace `botdeal`, et le navigateur refuse `http://localhost:3000` avec `ERR_BLOCKED_BY_CLIENT`. Le statut de build ne valide donc ni la confidentialité de la preview, ni les parcours réels avec emails, ni le rendu mobile.
+
+## Admin : intégrité des offres — suite de `618e7fc`
+
+L’édition préserve le vendeur existant lorsque son nom ne change pas, y compris son identifiant, son slug et sa vérification. Le lien de la fiche marchande et le lien affilié facultatif sont maintenant distincts ; effacer ce dernier rétablit bien la redirection vers le vendeur. Aucun réseau d’affiliation n’est connecté. Les dates de début/expiration UTC sont contrôlées côté interface et base, et les offres mises en avant sont prioritaires sur l’accueil. Les clients antérieurs peuvent continuer à appeler la même RPC sans effacer les nouveaux champs optionnels.
+
+Le scénario SQL a reproduit le remplacement incorrect du vendeur avant migration, puis a passé après correction. Il couvre aussi les liens invalides, les dates inversées, les offres programmées, l’effacement du lien affilié et la compatibilité des anciennes requêtes. Les données de test ont été annulées. Les 26 tests JSDOM passent ; cela ne remplace pas une validation dans un navigateur réel.
+
+Après la reconnexion Vercel annoncée par le propriétaire, le connecteur retourne toujours une équipe vide et 403 sur le projet. Ce blocage est traité comme un problème du connecteur, sans nouvelle demande de reconnexion. La protection contre les mots de passe compromis reste la seule alerte du contrôle sécurité Supabase, déjà documentée plus haut.

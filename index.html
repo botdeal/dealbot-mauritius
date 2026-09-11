@@ -3895,7 +3895,7 @@
         </label>
 
         <label class="full">
-          Lien vendeur / affilié
+          Lien de la fiche chez le vendeur
 
           <input
             type="url"
@@ -3906,7 +3906,10 @@
 
         <label>État <select id="adminDealStatus"><option value="draft">Brouillon</option><option value="active">Publié</option><option value="paused">En pause</option><option value="expired">Expiré</option><option value="archived">Archivé</option></select></label>
         <label>Devise <select id="adminDealCurrency"><option>MUR</option><option>EUR</option><option>USD</option><option>GBP</option></select></label>
+        <label class="full">Lien affilié HTTPS (facultatif) <input id="adminDealAffiliate" type="url" placeholder="https://..."></label>
         <label class="full">Image HTTPS <input id="adminDealImage" type="url"></label>
+        <label>Début de publication (UTC) <input id="adminDealStart" type="datetime-local"></label>
+        <label><input id="adminDealFeatured" type="checkbox" style="width:auto;min-height:0;align-self:flex-start;"> Mettre en avant sur l’accueil</label>
         <label>Expiration (UTC) <input id="adminDealExpiry" type="datetime-local"></label>
         <label class="full">
           Description
