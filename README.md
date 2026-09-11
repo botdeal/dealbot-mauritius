@@ -32,7 +32,7 @@ RLS maintenues sur toutes les tables exposées; suppression des privilèges TRUN
 
 ## Vérification effectuée
 
-- `npm ci --ignore-scripts` puis `npm test` : 19 tests d'interface et de logique passent. JSDOM et un backend simulé vérifient les interactions; ces tests ne constituent pas un contrôle visuel dans Chrome ni une validation des emails réels.
+- `npm ci --ignore-scripts` puis `npm test` : 22 tests d'interface et de logique passent. JSDOM et un backend simulé vérifient les interactions; ces tests ne constituent pas un contrôle visuel dans Chrome ni une validation des emails réels.
 - `tests/database.sql` exécuté sur Supabase : isolation entre comptes, refus d'accès admin et de changement de rôle, édition du profil, sauvegarde atomique, comparaison, redirection, expiration, déclenchement d'alerte, historique, archivage, audit et limite de contact. Toutes les données de test sont annulées par ROLLBACK.
 - `python tests/rest-smoke.py` : six appels réels en lecture seule à l'API publique passent. Les données privées ne sont pas exposées au visiteur.
 - Analyse syntaxique Node de `app.js` et `backend.js`.
@@ -68,3 +68,11 @@ Les corrections suivantes prolongent ce commit sans le réécrire :
 Au contrôle du 9 septembre 2026, les empreintes MD5 du SQL des trois migrations de référence correspondent exactement aux fichiers de `09b818a` : `f3b07e6da6d90f5a69f6704f72d61cbb`, `ee447437632b08bc6ae49e1ca7f827a3`, `5d7e5b376aa10955bbf7fb141d2c760b` (ordre ci-dessus). Les 14 tables publiques ont RLS activée. La quatrième migration a été appliquée via Supabase ; son fichier porte la version effectivement enregistrée à distance.
 
 La branche GitHub était encore sur `afb7a78` lors de ce contrôle. Le transfert de la suite conserve `09b818a` comme parent ; il ne prouve pas un push. Aucun déploiement, merge, connexion Admitad ou achat n’a été effectué. Les conditions de validation en production indiquées ci-dessus restent à satisfaire.
+
+## Transfert GitHub et sélections indisponibles — 11 septembre 2026
+
+Le connecteur GitHub a transféré la référence `7037dbc` sur `supabase-integration` sous le commit `9596e4d198fdf314e8d2ce5cbcf9b14ebcec4e8d`. Les deux arbres Git ont exactement la même empreinte `a37827c3d1644b6bbe43a09a8c3011e48d186400` : le code est identique, seules les métadonnées de commit diffèrent. Aucun merge ni modification de `main`.
+
+La suite rend supprimables les favoris et comparaisons d’offres absentes du catalogue, désactive la comparaison lorsque la sélection est incomplète ou mélange les devises, et actualise le tableau après changement de sélection ou de catalogue. Trois tests de régression supplémentaires passent. Aucune migration supplémentaire n’est nécessaire.
+
+GitHub rapporte un statut Vercel réussi pour `9596e4d` (déploiement automatique existant). Le connecteur Vercel retourne encore 403 pour l’espace `botdeal`, et le navigateur refuse `http://localhost:3000` avec `ERR_BLOCKED_BY_CLIENT`. Le statut de build ne valide donc ni la confidentialité de la preview, ni les parcours réels avec emails, ni le rendu mobile.

@@ -837,7 +837,7 @@ if (page === "admin") {
         );
       });
 
-    if (!favorites.length) {
+    if (!state.favorites.length) {
       empty.hidden = false;
       return;
     }
@@ -851,6 +851,19 @@ if (page === "admin") {
     });
 
     bindProductEvents(grid);
+    state.favorites.filter(id => !getDeal(id)).forEach(id => {
+      grid.appendChild(unavailableSelection(() => toggleFavorite(id)));
+    });
+  }
+
+  function unavailableSelection(remove) {
+    const item = document.createElement('article'); item.className = 'state-box';
+    const label = document.createElement('p');
+    label.textContent = state.lang === 'en' ? 'This offer is unavailable in the current catalog.' : 'Cette offre est indisponible dans le catalogue actuel.';
+    const button = document.createElement('button'); button.type = 'button'; button.className = 'btn ghost small';
+    button.dataset.removeUnavailable = '';
+    button.textContent = state.lang === 'en' ? 'Remove from selection' : 'Retirer de la sélection';
+    button.addEventListener('click', remove); item.append(label, button); return item;
   }
 
   /* =========================================================
@@ -2017,8 +2030,9 @@ if (page === "admin") {
 
     container.innerHTML = "";
 
-    if (!DEALS.length) {
+    if (!DEALS.length && !state.compare.length) {
       empty.hidden = false;
+      updateCompareBar();
       return;
     }
 
@@ -2112,7 +2126,11 @@ if (page === "admin") {
       container.appendChild(card);
     });
 
+    state.compare.filter(id => !getDeal(id)).forEach(id => {
+      container.appendChild(unavailableSelection(() => toggleCompare(id)));
+    });
     updateCompareBar();
+    if (!document.getElementById('compareResults').hidden) renderCompareResults();
   }
 
   function updateCompareBar() {
@@ -2137,13 +2155,19 @@ if (page === "admin") {
     document.getElementById(
       "runCompare"
     ).disabled =
-      count < 2;
+      !validComparison();
 
-    if (count < 2) {
+    if (!validComparison()) {
       document.getElementById(
         "compareResults"
       ).hidden = true;
     }
+  }
+
+  function validComparison() {
+    const selected = DEALS.filter(deal => state.compare.includes(deal.id));
+    return selected.length >= 2 && selected.length === state.compare.length
+      && selected.every(deal => deal.currency === selected[0].currency);
   }
 
   function renderCompareResults() {
@@ -2157,8 +2181,9 @@ if (page === "admin") {
       );
 
     if (
-      selected.length < 2
+      !validComparison()
     ) {
+      document.getElementById('compareResults').hidden = true;
       return;
     }
 

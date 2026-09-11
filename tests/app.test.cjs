@@ -181,3 +181,29 @@ test('an alert never compares its threshold against a different currency',async(
   assert.match(content,/€/);
   dom.window.close();
 });
+
+test('unavailable favorites can be removed even from an empty catalog',async()=>{
+  const {dom,w,calls}=await setup({user:'user-one',hash:'#favorites',empty:true,personal:{favorites:[999],compare:[],alerts:[]}});
+  w.document.querySelector('#favoriteDeals [data-remove-unavailable]').click();await delay();
+  assert.equal(calls[0][1].favorites.length,0);
+  assert.equal(w.document.getElementById('favoritesEmpty').hidden,false);dom.window.close();
+});
+
+test('unavailable compared offers remain removable and cannot start comparison',async()=>{
+  const {dom,w,calls}=await setup({user:'user-one',hash:'#compare',personal:{favorites:[],compare:[11,999],alerts:[]}});
+  assert.equal(w.document.getElementById('runCompare').disabled,true);
+  w.document.querySelector('#comparePicker [data-remove-unavailable]').click();await delay();
+  assert.deepEqual(Array.from(calls[0][1].compare),[11]);
+  assert.match(w.document.getElementById('compareCount').textContent,/1 \/ 4/);dom.window.close();
+});
+
+test('catalog refresh invalidates a comparison after a currency change',async()=>{
+  const {dom,w,api}=await setup({user:'user-one',hash:'#compare',personal:{favorites:[],compare:[11,12],alerts:[]}});
+  w.document.getElementById('runCompare').click();
+  assert.equal(w.document.getElementById('compareResults').hidden,false);
+  api.catalog=async()=>({deals:[deal,{...deal,id:12,currency:'EUR'}],categories,merchants:[]});
+  Object.defineProperty(w.document,'hidden',{configurable:true,value:false});
+  w.document.dispatchEvent(new w.Event('visibilitychange'));await delay();
+  assert.equal(w.document.getElementById('runCompare').disabled,true);
+  assert.equal(w.document.getElementById('compareResults').hidden,true);dom.window.close();
+});
