@@ -2463,7 +2463,11 @@ if (page === "admin") {
 
         </div>
 
-        <p>Réduction affichée : ${discount(deal)} %. Score éditorial saisi par l’administrateur, sans prédiction de prix.</p>
+        <p>${state.lang==='en'?'Displayed discount':'Réduction affichée'} : ${discount(deal)} %.
+        ${deal.scoreMethod==='automatic-v1'
+          ? (state.lang==='en'?'Automatic score v1: discount (50), stock (20), description/image (10), verified merchant (20).':'Score automatique v1 : réduction (50), stock (20), description/image (10), marchand vérifié (20).')
+          : (state.lang==='en'?'Editorial score entered by an administrator.':'Score éditorial saisi par l’administrateur.')}
+        ${state.lang==='en'?'No price prediction.':'Sans prédiction de prix.'}</p>
         <button
           type="button"
           class="btn ghost small"
@@ -3610,6 +3614,8 @@ function openAdminDealEditor(id) {
     "adminDealScore"
   ).value =
     deal ? deal.score : 70;
+
+  document.getElementById('adminDealScore').disabled = deal?.scoreMethod === 'automatic-v1';
 
   document.getElementById(
     "adminDealAvailability"

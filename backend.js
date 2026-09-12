@@ -18,6 +18,7 @@
       categoryId: deal.category_id, merchantId: deal.merchant_id, store: merchant?.name || 'Marchand non renseigné',
       price: Number(deal.price), oldPrice: deal.old_price == null ? Number(deal.price) : Number(deal.old_price),
       score: Number(deal.dealbot_score), availability: ({in_stock:'available', out_of_stock:'outofstock',limited:'limited'})[deal.availability] || 'unknown',
+      scoreMethod: deal.score_method || 'editorial', scoreDetails: deal.score_details || null,
       description: deal.description || deal.short_description || '', addedAt: (deal.created_at || '').slice(0,10),
       affiliateUrl: safeUrl(deal.affiliate_url || deal.original_url), originalUrl: safeUrl(deal.original_url),
       affiliateOverride: safeUrl(deal.affiliate_url),

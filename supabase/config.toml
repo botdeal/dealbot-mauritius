@@ -1,0 +1,4 @@
+project_id = "dealbot-mauritius"
+
+[functions.dealbot-sync]
+verify_jwt = false
