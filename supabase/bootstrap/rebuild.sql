@@ -11,5 +11,10 @@ end $$;
 \ir seed.sql
 \ir ../migrations/20260912105450_dealbot_autopilot.sql
 \ir ../migrations/20260912160337_dealbot_autopilot_score_consistency.sql
+\ir ../migrations/20260912162739_dealbot_autopilot_streams.sql
+\ir ../migrations/20260912163127_dealbot_autopilot_audit_bounds.sql
+\ir ../migrations/20260912163729_dealbot_autopilot_worker_budget.sql
+\ir ../migrations/20260912163940_dealbot_autopilot_retry_retention.sql
 commit;
 \ir ../migrations/20260912105616_dealbot_autopilot_schedule.sql
+\ir ../migrations/20260912162803_dealbot_autopilot_retention_schedule.sql

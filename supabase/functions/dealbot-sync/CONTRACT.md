@@ -69,3 +69,36 @@ Supabase pg_cron runs `private.sync_tick()` every minute, with a 45-second state
 SQLSTATE classes 08/40/53/57 and 55P03 retry with exponential delays 30/60/120/240 seconds, maximum five attempts. Permanent errors fail immediately. After the transient limit, an owner may explicitly request retry; this writes a manual_retry event. Superseded revisions never overwrite newer state. Queue payloads, hashes, attempt counts, results and events are private, RLS-enabled and inaccessible to browser roles. No retention purge is enabled: define archival/retention before sustained volume.
 
 Cron processes already-submitted batches; it does NOT periodically fetch Admitad or another feed. Future collection scheduling must enqueue canonical batches and keep source credentials server-side. Cron itself requires no secret or HTTP request.
+
+## Multipart snapshots (v6)
+
+POST `{action:"snapshot",request:{...}}` using the same server authentication.
+
+1. `op:"begin", source, key, revision, pages, offers`: reserve a unique manifest. `pages` and `offers` are the expected total counts, not the current page counts. Persist this manifest and the exact chunk boundaries in the collector.
+2. `op:"chunk", id, page, offers:[...]`: zero-based contiguous page, at most 500 offers and 2 MiB including JSON overhead. Response gives its SHA-256 digest. Exact replay is safe; changed content for the same page is rejected.
+3. `op:"seal", id, digests:[...]`: supply receipt digests in page order. Only all expected pages and offers can seal. Response includes `run_id`; sealing queues the atomic import (HTTP 202). Poll the existing `status` action with that run ID. Cron processes it.
+4. `op:"status", id`: snapshot receipt progress. Uploads older than 24 hours are abandoned by hourly retention. Never treat an abandoned upload as a completed source.
+
+Current explicitly bounded operating envelope: **10,000 offers, 1,000 chunks, 64 MiB per snapshot**. A feed exceeding this capacity is rejected, never silently truncated. Chunks solve the HTTP 2 MiB/500-offer limit; the final database transaction still applies one complete snapshot atomically. This is not an unlimited streaming database engine. The 5,000-offer workload has been exercised on the existing Supabase project.
+
+`stream.mjs` creates byte-aware UTF-8 chunks and uploads manifests with stable receipts. It accepts already canonical offers, independent of network. A collector must finish/verify its source pagination before announcing expected totals; page-level transport success alone cannot prove the upstream feed is complete. For inputs beyond the operating envelope, explicitly partition independent source catalogs or extend/test capacity; do not falsely seal a partial source.
+
+Duplicate offer IDs and conflicting merchant/category definitions across pages reject the entire import. No catalog data changes while uploading; successful processing updates offers and performs absence reconciliation together. A source revision reserved by a snapshot cannot also be submitted as a direct batch. Monotonic source revision watermarks survive journal cleanup.
+
+## Retention and worker budget
+
+- Worker every minute, one atomic run per tick, transaction timeout 45 seconds.
+- Hourly bounded retention: uploading snapshots abandoned after 24h; abandoned/sealed terminal staging removed after 7 days (100 snapshots/pass).
+- Successful/superseded payload bodies removed after 7 days; receipt hashes and status retained for 30 days. Failed payloads retained for the full 90-day retry window.
+- Queued/retrying work older than 7 days becomes `failed / QUEUE_EXPIRED`; it requires a new revision, not blind retry.
+- Successful/superseded runs and their events deleted after 30 days; failed runs after 90 days (500 runs/pass). Pending work is not silently purged.
+- Autopilot Cron execution history retained 14 days, cleaned daily.
+- Catalog, users, favorites, alerts and price history are never removed by this policy. Automatic imports use per-run events rather than duplicating every row operation into admin audit logs; human admin actions remain audited.
+
+Exact replay receipts are only guaranteed inside retention windows. After receipts expire, the source revision watermark rejects old successful revisions. Keep collector checkpoints; use a new revision for new upstream data.
+
+## Admitad connection boundary
+
+`sources/admitad.mjs` is a connection factory with injected, authorized `pages()` and `normalize()` functions. It intentionally throws `ADMITAD_CONNECTION_REQUIRED` without them. It contains **no API endpoint, OAuth scope, query parameter or guessed response mapping**. Selecting the actual approved account feed/program determines these details. All network-specific auth, quota, pagination and mapping stay in that connection layer; the snapshot engine does not depend on Admitad.
+
+This is prepared for connecting the real account, not a claim that a live Admitad collector already exists. No network request to Admitad has been made.

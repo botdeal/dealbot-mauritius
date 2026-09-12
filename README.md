@@ -1,5 +1,7 @@
 # DealBot — intégration Supabase
 
+État Autopilot actuel : [assemblage multipart, test HTTP réel, charge et rétention](AUTOPILOT-CONNECTION-READINESS.md). Les anciens audits ci-dessous restent des états historiques.
+
 **Autopilot — suite de `2a7bc9d` :** le moteur d'import, le score automatique, la file durable et le worker Supabase Cron sont maintenant implémentés. Voir [validation et limites actuelles](AUTOPILOT-VALIDATION.md) et [contrat des adaptateurs](supabase/functions/dealbot-sync/CONTRACT.md). Les sections ci-dessous décrivent aussi les états historiques antérieurs où sync ne faisait qu'un contrôle de base.
 
 État détaillé le plus récent : [audit du 12 septembre 2026 depuis 652c3d0](AUDIT-2026-09-12.md). Il distingue tests simulés, vérifications Supabase réelles et limites d'accès navigateur. La preview existe et demande une connexion Vercel malgré le 403 du connecteur. Le source distant de `dealbot-sync` v3 est maintenant versionné sans redéploiement ; il n'importe toujours aucune offre. Les tests d'audit utilisent Node 24 (36 tests).

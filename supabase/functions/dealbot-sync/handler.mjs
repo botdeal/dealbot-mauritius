@@ -29,6 +29,12 @@ export async function handle(req,db) {
       return error?respond({ok:false,error:'run_request_failed'},error.code==='22023'?400:503):respond({ok:!!data,run:data},data?200:404);
     }catch{return respond({ok:false,error:'run_request_unavailable'},503);}
   }
+  if(action==='snapshot') {
+    try {
+      const {data,error}=await db.rpc('sync_snapshot',{request:input.request});
+      return error?respond({ok:false,error:'snapshot_rejected',code:error.code},['22023','23505','23514','22P02'].includes(error.code)?400:503):respond({ok:true,...data},data.state==='sealed'?202:200);
+    }catch{return respond({ok:false,error:'snapshot_unavailable',retry_same_request:true},503);}
+  }
   if(action!=='submit')return respond({ok:false,error:'unsupported_action'},400);
   let batch;
   try {batch=adapt(input.adapter||'canonical-v1',input.batch);}catch{return respond({ok:false,error:'invalid_adapter_or_batch'},400);}
