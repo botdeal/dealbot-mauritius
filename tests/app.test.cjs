@@ -9,24 +9,24 @@ const delay = () => new Promise(r=>setTimeout(r,25));
 const raw = {id:11,name:'Phone <script>bad()</script>',price:12000,old_price:15000,currency:'MUR',merchant_id:1,category_id:1,status:'active',availability:'in_stock',original_url:'https://example.com/product',dealbot_score:75};
 const categories = [{id:1,slug:'technology',name_fr:'Technologie',name_en:'Technology',is_active:true,sort_order:0}];
 const deal = backend.normalizeDeal(raw,[{id:1,name:'Shop'}],categories);
-async function setup({user=null,role='user',empty=false,fail=false,hash='',saveFail=false,loginError=false,personal={favorites:[],compare:[],alerts:[]}}={}) {
+async function setup({user=null,role='user',empty=false,fail=false,hash='',saveFail=false,loginError=false,personalFail=false,personal={favorites:[],compare:[],alerts:[]}}={}) {
   const errors=[]; const vc=new VirtualConsole(); vc.on('jsdomError',e=>errors.push(e));
   const dom=new JSDOM(html,{url:'https://test.example/'+hash,runScripts:'outside-only',virtualConsole:vc});
   const w=dom.window; w.scrollTo=()=>{}; w.confirm=()=>true;
-  let authListener; const calls=[];
+  let authListener, client; const calls=[];
   const session=user ? {user:{id:user,email:'test@example.com'}} : null;
   const api={catalog:async()=>{if(fail) throw Error('offline'); return {deals:empty?[]:[deal,{...deal,id:12,name:'Other phone'}],categories,merchants:[]};},
-    personal:async()=>structuredClone(personal),savePersonal:async data=>{calls.push(['save',data]); if(saveFail) throw Error('offline');},
+    personal:async()=>{if(personalFail) throw Error('offline');return structuredClone(personal);},savePersonal:async data=>{calls.push(['save',data]); if(saveFail) throw Error('offline');},
     history:async()=>[{price:12000,currency:'MUR',recorded_at:'2026-09-08'}],saveDeal:async data=>{calls.push(['admin',data]); return 11;},
     archiveDeal:async id=>calls.push(['archive',id]),track:async()=> 'https://example.com/product'};
   const query={select(){return this},eq(){return this},single(){return this},then(resolve){return Promise.resolve({data:{role,full_name:'Test'},error:null}).then(resolve)}};
-  w.supabase={createClient:()=>({from:()=>query,auth:{getSession:async()=>({data:{session}}),getUser:async()=>({data:{user:session?.user}}),
+  w.supabase={createClient:()=>(client={from:()=>query,auth:{getSession:async()=>({data:{session}}),getUser:async()=>({data:{user:session?.user}}),
     signInWithPassword:async()=>{if(loginError) throw Error('network failure');return {data:{session:{user:{id:'signed-in',email:'test@example.com'}}}};},
     signUp:async()=>({data:{session:null}}),resetPasswordForEmail:async()=>{calls.push(['recovery']);return {};},updateUser:async()=>({}),
     onAuthStateChange:fn=>{authListener=fn},signOut:async()=>{authListener('SIGNED_OUT',null);return{};}}})};
   w.DealBotBackend={...backend,create:()=>api};
   w.eval(script); await delay();
-  return {dom,w,calls,errors,authListener,api};
+  return {dom,w,calls,errors,authListener,api,client};
 }
 test('safe URLs, expiry, currency and stock normalization',()=>{
   for(const url of ['javascript:alert(1)','http://example.com','https://user:pass@example.com','data:text/html,x','']) assert.equal(backend.safeUrl(url),'');
@@ -247,4 +247,61 @@ test('home prioritizes offers explicitly featured by the admin',async()=>{
   Object.defineProperty(w.document,'hidden',{configurable:true,value:false});
   w.document.dispatchEvent(new w.Event('visibilitychange'));await delay();
   assert.match(w.document.querySelector('#featuredDeals .product-card').textContent,/Featured offer/);dom.window.close();
+});
+
+test('account data failure can be retried without reloading the page',async()=>{
+  const {dom,w,api,calls}=await setup({user:'user-one',personalFail:true});
+  assert.equal(w.document.getElementById('retryAccount').hidden,false);
+  api.personal=async()=>({favorites:[],compare:[],alerts:[]});
+  w.document.getElementById('retryAccount').click();await delay();
+  assert.equal(w.document.getElementById('retryAccount').hidden,true);
+  w.document.querySelector('[data-save]').click();await delay();
+  assert.equal(calls[0][0],'save');dom.window.close();
+});
+
+test('late profile save never restores personal data after signout',async()=>{
+  const {dom,w,client,authListener}=await setup({user:'user-one',hash:'#profile'});
+  let release;const query={update(){return this},eq(){return this},select(){return this},single(){return new Promise(r=>{release=r})}};
+  client.from=()=>query;
+  w.document.getElementById('editProfileName').value='Old account';
+  w.document.getElementById('profileForm').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
+  authListener('SIGNED_OUT',null);await delay();
+  release({data:{full_name:'Old account',role:'admin'},error:null});await delay();
+  assert.equal(w.document.getElementById('accountBox').hidden,true);
+  assert.doesNotMatch(w.document.getElementById('profileName').textContent,/Old account/);dom.window.close();
+});
+
+test('recovery form handles success and expired links without a stuck button',async()=>{
+  for(const failed of [false,true]) {
+    const {dom,w,client,authListener}=await setup({user:'user-one'});
+    let submitted;
+    client.auth.updateUser=async input=>{submitted=input;return failed?{error:Error('expired')}:{}};
+    authListener('PASSWORD_RECOVERY',{user:{id:'user-one'}});await delay();
+    assert.equal(w.document.getElementById('recoveryModal').classList.contains('open'),true);
+    w.document.getElementById('recoveryPassword').value='long-test-password';
+    w.document.getElementById('recoveryForm').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));await delay();
+    assert.equal(submitted.password,'long-test-password');
+    assert.equal(w.document.querySelector('#recoveryForm button').disabled,false);
+    assert.equal(w.document.getElementById('recoveryModal').classList.contains('open'),failed);dom.window.close();
+  }
+});
+
+test('queued saves use the last server-confirmed state',async()=>{
+  const {dom,w,api}=await setup({user:'user-one'});
+  const expectedStates=[];
+  api.savePersonal=async(next,expected)=>{expectedStates.push(structuredClone(expected));return structuredClone(next)};
+  w.document.querySelector('[data-save="11"]').click();
+  w.document.querySelector('[data-save="12"]').click();await delay();
+  assert.deepEqual(Array.from(expectedStates[0].favorites),[]);
+  assert.deepEqual(Array.from(expectedStates[1].favorites),[11]);dom.window.close();
+});
+
+test('a stale-device save reloads server selections and reports the conflict',async()=>{
+  const {dom,w,api}=await setup({user:'user-one'});
+  api.savePersonal=async()=>{throw {code:'40001'}};
+  api.personal=async()=>({favorites:[12],compare:[],alerts:[]});
+  w.document.querySelector('[data-save="11"]').click();await delay();
+  assert.match(w.document.getElementById('toast').textContent,/autre appareil/);
+  assert.equal(w.document.querySelector('[data-save="11"]').classList.contains('saved'),false);
+  assert.equal(w.document.querySelector('[data-save="12"]').classList.contains('saved'),true);dom.window.close();
 });

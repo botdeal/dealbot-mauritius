@@ -140,5 +140,19 @@ begin
   if (select currency from public.price_alerts where deal_id=d) <> 'EUR' then raise exception 'Same-threshold alert currency not updated'; end if;
   if (select status from public.price_alerts where deal_id=d) <> 'triggered' then raise exception 'Currency update did not re-evaluate alert'; end if;
 end $$;
+do $$
+declare before_state jsonb := private.personal_snapshot(); saved jsonb;
+  d bigint := (current_setting('dealbot.test')::jsonb->>'deal')::bigint;
+begin
+  saved := public.save_personal_state_checked('{}',array[d],before_state->'alerts',before_state);
+  if saved->'favorites' <> '[]'::jsonb then raise exception 'Saved snapshot did not reflect transaction'; end if;
+  begin
+    perform public.save_personal_state_checked(array[d],array[d],before_state->'alerts',before_state);
+    raise exception 'Stale device overwrote newer favorites';
+  exception when serialization_failure then null; end;
+  if exists(select 1 from public.favorites where deal_id=d) then raise exception 'Conflict was not atomic'; end if;
+  saved := jsonb_set(saved,'{alerts,0,status}','"active"'::jsonb);
+  perform public.save_personal_state_checked('{}',array[d],saved->'alerts',saved);
+end $$;
 rollback;
 select 'PASS: guest, ownership, signup metadata, role protection, profile update, admin, atomic state, comparison limit, tracking and click quota, expired redirects, price alerts, history, archive, audit; fixtures rolled back' as result;

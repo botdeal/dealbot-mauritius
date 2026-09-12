@@ -51,7 +51,7 @@
         return {favorites: favorites.map(x=>Number(x.deal_id)), compare:compare.map(x=>Number(x.deal_id)),
           alerts:alerts.filter(x=>x.status !== 'deleted').map(x=>({id:Number(x.id),productId:Number(x.deal_id),targetPrice:Number(x.target_price),status:x.status,currency:x.currency}))};
       },
-      savePersonal(state) { return checked(db.rpc('save_personal_state',{favorite_ids:state.favorites,comparison_ids:state.compare,
+      savePersonal(state, expectedState) { return checked(db.rpc('save_personal_state_checked',{expected_state:expectedState,favorite_ids:state.favorites,comparison_ids:state.compare,
         alerts:state.alerts.map(a=>({productId:a.productId,targetPrice:a.targetPrice,currency:a.currency}))})); },
       saveDeal(payload) { return checked(db.rpc('admin_save_deal',{payload})); },
       archiveDeal(id) { return checked(db.from('deals').update({status:'archived'}).eq('id',id).select('id').single()); },

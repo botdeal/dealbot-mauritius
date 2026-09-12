@@ -37,11 +37,9 @@
 
     if (error) {
       console.error("DealBot — Profile error:", error);
-      currentProfile = null;
-      return null;
+      throw error;
     }
 
-    if(currentUser?.id === userId) currentProfile = data;
     return data;
   }
 
@@ -50,6 +48,7 @@
   let saveQueue = Promise.resolve();
   let saveGeneration = 0;
   let personalRevision = 0;
+  let confirmedPersonalState = null;
   let api;
   async function restoreSession(session) {
     const nextId = session?.user?.id || null;
@@ -63,6 +62,7 @@
     ++catalogRevision;
     ++personalRevision;
     personalReady = false;
+    confirmedPersonalState = null;
     currentSession = session;
     currentUser = session?.user || null;
     currentProfile = null;
@@ -71,6 +71,7 @@
     document.getElementById('adminMessages').replaceChildren();
     state.favorites = []; state.compare = []; state.alerts = [];
     document.getElementById('saveStatus').textContent = '';
+    document.getElementById('retryAccount').hidden = true;
     updateAccountUI();
     refreshCurrentPage();
     try {
@@ -79,6 +80,7 @@
         const personal = await api.personal(nextId);
         if (revision !== authRevision) return;
         currentProfile = profile;
+        confirmedPersonalState = JSON.parse(JSON.stringify(personal));
         Object.assign(state, personal);
       }
       if (revision !== authRevision) return;
@@ -86,13 +88,18 @@
       updateAccountUI();
       await loadCatalogFromSupabase();
     } catch (error) {
-      if (revision === authRevision) showToast('Connexion aux données impossible. Réessayez.');
+      if (revision === authRevision) {
+        showToast('Connexion aux données impossible. Réessayez.');
+        document.getElementById('retryAccount').hidden = !nextId;
+      }
       console.error('Account restore failed', error.message);
       if (revision === authRevision) await loadCatalogFromSupabase();
     }
   }
   async function initializeSupabaseAuth() {
+    const revision = authRevision;
     const {data, error} = await db.auth.getSession();
+    if (revision !== authRevision) return;
     if (error) { showToast('Session indisponible. Réessayez.'); await restoreSession(null); return; }
     await restoreSession(data.session);
   }
@@ -331,16 +338,20 @@
     saveQueue = saveQueue.then(async () => {
       if (revision !== authRevision || currentUser?.id !== userId || generation !== saveGeneration) return false;
       try {
-        await api.savePersonal(snapshot);
-        if (revision === authRevision) status.textContent = 'Enregistré dans votre compte';
+        const saved = await api.savePersonal(snapshot, confirmedPersonalState);
+        if (revision === authRevision) {
+          confirmedPersonalState = JSON.parse(JSON.stringify(saved || snapshot));
+          status.textContent = 'Enregistré dans votre compte';
+        }
         return true;
       } catch (error) {
         if (revision === authRevision) {
           saveGeneration++;
           status.textContent = 'Échec de sauvegarde. Rechargez vos données avant de réessayer.';
           personalReady = false;
-          showToast('La modification n’a pas été enregistrée.');
-          try { const data = await api.personal(userId); if (revision === authRevision) { Object.assign(state,data); personalReady=true; refreshCurrentPage(); } } catch {}
+          showToast(error.code === '40001' ? 'Votre sélection a changé sur un autre appareil. La modification n’a pas été enregistrée.' : 'La modification n’a pas été enregistrée.');
+          try { const data = await api.personal(userId); if (revision === authRevision) { confirmedPersonalState=JSON.parse(JSON.stringify(data)); Object.assign(state,data); personalReady=true; refreshCurrentPage(); } }
+          catch { if (revision === authRevision) document.getElementById('retryAccount').hidden = false; }
         }
         return false;
       }
@@ -3168,20 +3179,24 @@ const accountButton =
   });
   document.getElementById('profileForm').addEventListener('submit',async event=>{
     event.preventDefault(); if(!requireAccount()) return;
+    const revision=authRevision, userId=currentUser.id;
     const button=event.target.querySelector('button');button.disabled=true;
-    try { currentProfile=await apiChecked(db.from('profiles').update({full_name:document.getElementById('editProfileName').value.trim()}).eq('id',currentUser.id).select('*').single());
+    try { const profile=await apiChecked(db.from('profiles').update({full_name:document.getElementById('editProfileName').value.trim()}).eq('id',userId).select('*').single());
+      if(revision!==authRevision) return;
+      currentProfile=profile;
       updateAccountUI();renderProfile();showToast('Profil enregistré.');
-    } catch { showToast('Profil non enregistré.'); } finally { button.disabled=false; }
+    } catch { if(revision===authRevision) showToast('Profil non enregistré.'); } finally { button.disabled=false; }
   });
   async function renderAdminMessages() {
+    const revision=authRevision;
     const target=document.getElementById('adminMessages');
     try {
       const messages=await apiChecked(db.from('contact_messages').select('name,email,message,created_at').order('created_at',{ascending:false}).limit(50));
-      if(currentProfile?.role!=='admin') return;
+      if(revision!==authRevision || currentProfile?.role!=='admin') return;
       target.replaceChildren();const title=document.createElement('h3');title.textContent='Messages reçus';target.appendChild(title);
       if(!messages.length) target.append('Aucun message.');
       messages.forEach(m=>{const item=document.createElement('p');item.textContent=m.name+' — '+m.email+' : '+m.message;target.appendChild(item);});
-    } catch { target.textContent='Messages indisponibles.'; }
+    } catch { if(revision===authRevision && currentProfile?.role==='admin') target.textContent='Messages indisponibles.'; }
   }
   async function loadAds() {
     try {
@@ -3359,10 +3374,10 @@ async function renderAdmin() {
       error
     } = await db.auth.getUser();
 
+    if(revision!==authRevision) return;
     if (error || !user) {
-      currentSession = null;
-      currentUser = null;
       currentProfile = null;
+      updateAccountUI();
 
       showToast(
         state.lang === "en"
@@ -3377,8 +3392,10 @@ async function renderAdmin() {
     if(revision!==authRevision) return;
     currentUser = user;
 
-    await loadSupabaseProfile(user.id);
+    const profile = await loadSupabaseProfile(user.id);
     if(revision!==authRevision) return;
+    currentProfile = profile;
+    updateAccountUI();
 
     if (
       !currentProfile ||
@@ -3397,6 +3414,9 @@ async function renderAdmin() {
 
 
   } catch (error) {
+    if(revision!==authRevision) return;
+    currentProfile = null;
+    updateAccountUI();
     console.error(
       "DealBot — Admin verification error:",
       error
@@ -3827,6 +3847,10 @@ adminDealForm.addEventListener('submit', async function(event) {
     else if(!event.shiftKey && document.activeElement===last) {event.preventDefault();first?.focus();}
   });
   api = window.DealBotBackend.create(db);
+  document.getElementById('retryAccount').addEventListener('click',async event=>{
+    const button=event.currentTarget;button.disabled=true;
+    try { await restoreSession(currentSession); } finally { button.disabled=false; }
+  });
   document.getElementById('catalogStatus').querySelector('button').addEventListener('click',()=>{if(!personalReady) initializeSupabaseAuth();else loadCatalogFromSupabase();});
   document.getElementById('currencyFilter').addEventListener('change',event=>{state.filters.currency=event.target.value;state.visibleDeals=DEALS_PER_PAGE;renderExplore();});
   init();
@@ -3835,7 +3859,7 @@ adminDealForm.addEventListener('submit', async function(event) {
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden && personalReady) { loadCatalogFromSupabase(); if (currentUser) saveQueue.then(async()=>{
       const id=currentUser?.id, revision=authRevision, readRevision=++personalRevision; if (!id) return;
-      try { const data=await api.personal(id); if(revision===authRevision && readRevision===personalRevision) { Object.assign(state,data); refreshCurrentPage(); } } catch {}
+      try { const data=await api.personal(id); if(revision===authRevision && readRevision===personalRevision) { confirmedPersonalState=JSON.parse(JSON.stringify(data)); Object.assign(state,data); refreshCurrentPage(); } } catch {}
     }); }
   });
 
