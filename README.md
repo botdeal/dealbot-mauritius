@@ -1,5 +1,7 @@
 # DealBot — intégration Supabase
 
+État détaillé le plus récent : [audit du 12 septembre 2026 depuis 652c3d0](AUDIT-2026-09-12.md). Il distingue tests simulés, vérifications Supabase réelles et limites d'accès navigateur. La preview existe et demande une connexion Vercel malgré le 403 du connecteur. Le source distant de `dealbot-sync` v3 est maintenant versionné sans redéploiement ; il n'importe toujours aucune offre. Les tests d'audit utilisent Node 24 (36 tests).
+
 Reprise du dépôt existant, uniquement sur `supabase-integration`, à partir du commit `afb7a785bd3ce928abe62f6259fee1e4a5be8c55`. L'interface et sa navigation sont conservées. Le JavaScript auparavant intégré dans `index.html` est déplacé dans `app.js`; `backend.js` centralise les appels et la normalisation.
 
 ## Fonctionnement

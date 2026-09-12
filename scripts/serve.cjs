@@ -2,7 +2,9 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '..');
+const securityHeaders = require('../vercel.json').headers[0].headers;
 http.createServer((req, res) => {
+  for (const {key,value} of securityHeaders) res.setHeader(key,value);
   const pathname = new URL(req.url, 'http://localhost').pathname;
   const allowed = {'/': 'index.html', '/index.html': 'index.html', '/vendor/supabase-2.116.0.js': 'vendor/supabase-2.116.0.js', '/app.js': 'app.js', '/backend.js': 'backend.js'};
   const file = allowed[pathname];

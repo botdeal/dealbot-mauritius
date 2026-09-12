@@ -36,8 +36,8 @@
     for (let start = 0; ; start += 500) {
       const page = await checked(db.from(table).select('*').order(order).range(start, start + 499));
       rows.push(...page);
+      if (rows.length > 10000) throw new Error('Catalogue trop volumineux : affinez le chargement côté serveur.');
       if (page.length < 500) return rows;
-      if (rows.length >= 10000) throw new Error('Catalogue trop volumineux : affinez le chargement côté serveur.');
     }
   }
   function create(db) {
