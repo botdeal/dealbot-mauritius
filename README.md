@@ -1,5 +1,7 @@
 # DealBot — intégration Supabase
 
+Frontend : [FR/EN, validations et limites de la vérification preview](FRONTEND-QUALITY.md).
+
 État Autopilot actuel : [assemblage multipart, test HTTP réel, charge et rétention](AUTOPILOT-CONNECTION-READINESS.md). Les anciens audits ci-dessous restent des états historiques.
 
 **Autopilot — suite de `2a7bc9d` :** le moteur d'import, le score automatique, la file durable et le worker Supabase Cron sont maintenant implémentés. Voir [validation et limites actuelles](AUTOPILOT-VALIDATION.md) et [contrat des adaptateurs](supabase/functions/dealbot-sync/CONTRACT.md). Les sections ci-dessous décrivent aussi les états historiques antérieurs où sync ne faisait qu'un contrôle de base.

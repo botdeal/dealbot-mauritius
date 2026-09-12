@@ -9,7 +9,7 @@ const delay = () => new Promise(r=>setTimeout(r,25));
 const raw = {id:11,name:'Phone <script>bad()</script>',price:12000,old_price:15000,currency:'MUR',merchant_id:1,category_id:1,status:'active',availability:'in_stock',original_url:'https://example.com/product',dealbot_score:75};
 const categories = [{id:1,slug:'technology',name_fr:'Technologie',name_en:'Technology',is_active:true,sort_order:0}];
 const deal = backend.normalizeDeal(raw,[{id:1,name:'Shop'}],categories);
-async function setup({user=null,role='user',empty=false,fail=false,hash='',saveFail=false,loginError=false,personalFail=false,personal={favorites:[],compare:[],alerts:[]}}={}) {
+async function setup({storedLang=null,user=null,role='user',empty=false,fail=false,hash='',saveFail=false,loginError=false,personalFail=false,personal={favorites:[],compare:[],alerts:[]}}={}) {
   const errors=[]; const vc=new VirtualConsole(); vc.on('jsdomError',e=>errors.push(e));
   const dom=new JSDOM(html,{url:'https://test.example/'+hash,runScripts:'outside-only',virtualConsole:vc});
   const w=dom.window; w.scrollTo=()=>{}; w.confirm=()=>true;
@@ -25,6 +25,8 @@ async function setup({user=null,role='user',empty=false,fail=false,hash='',saveF
     signUp:async()=>({data:{session:null}}),resetPasswordForEmail:async()=>{calls.push(['recovery']);return {};},updateUser:async()=>({}),
     onAuthStateChange:fn=>{authListener=fn},signOut:async()=>{authListener('SIGNED_OUT',null);return{};}}})};
   w.DealBotBackend={...backend,create:()=>api};
+  if(storedLang)w.localStorage.setItem('dealbot_language_v2',storedLang);
+  w.eval(fs.readFileSync('i18n.js','utf8'));
   w.eval(script); await delay();
   return {dom,w,calls,errors,authListener,api,client};
 }
@@ -304,4 +306,57 @@ test('a stale-device save reloads server selections and reports the conflict',as
   assert.match(w.document.getElementById('toast').textContent,/autre appareil/);
   assert.equal(w.document.querySelector('[data-save="11"]').classList.contains('saved'),false);
   assert.equal(w.document.querySelector('[data-save="12"]').classList.contains('saved'),true);dom.window.close();
+});
+
+test('FR/EN translates every marked static label and survives a fresh page load',async()=>{
+ const {dom,w}=await setup({empty:true});
+ w.document.querySelector('[data-lang-switch="en"]').click();await delay();
+ assert.equal(w.document.documentElement.lang,'en');assert.equal(w.localStorage.getItem('dealbot_language_v2'),'en');
+ for(const el of w.document.querySelectorAll('[data-i18n]')){
+  const entry=w.DealBotI18n.messages[el.dataset.i18n];assert.ok(entry,'Missing key '+el.dataset.i18n);
+  if(el.textContent.trim()===entry.fr&&entry.fr!==entry.en)assert.fail('Still French: '+el.dataset.i18n);
+ }
+ assert.match(w.document.getElementById('catalogStatus').textContent,/No deals have been published/);
+ const again=await setup({storedLang:w.localStorage.getItem('dealbot_language_v2'),empty:true});
+ assert.equal(again.w.document.documentElement.lang,'en');assert.match(again.w.document.title,/comparison/);
+ again.dom.window.close();
+ w.document.querySelector('[data-lang-switch="fr"]').click();await delay();
+ assert.match(w.document.getElementById('catalogStatus').textContent,/Aucune offre publiée/);dom.window.close();
+});
+test('all public routes and admin render in English without runtime errors',async()=>{
+ const {dom,w,errors}=await setup({storedLang:'en',user:'admin-one',role:'admin'});
+ for(const route of ['home','explore','categories','compare','intelligence','favorites','alerts','profile','how','about','contact','privacy','terms','admin','deal-11']){
+  w.location.hash='#'+route;await delay();assert.equal(w.document.querySelectorAll('[data-page-section].active').length,1,route);
+  const content=w.document.querySelector('[data-page-section].active').textContent;
+  for(const phrase of ['Parcourir par catégorie','Historique des prix','Prix actuel','Aucune alerte active','Modifier','Vos favoris'])assert.ok(!content.includes(phrase),route+' retained '+phrase);
+ }
+ assert.equal(errors.length,0);dom.window.close();
+});
+test('English validation and guest favorites open a usable translated modal',async()=>{
+ const {dom,w}=await setup({storedLang:'en'});
+ w.document.querySelector('[data-save]').click();await delay();
+ assert.ok(w.document.getElementById('loginModal').classList.contains('open'));
+ assert.match(w.document.getElementById('toast').textContent,/Log in to save/);
+ const email=w.document.getElementById('loginEmail');email.dispatchEvent(new w.Event('invalid'));
+ assert.equal(email.validationMessage,'Please fill out this field.');
+ email.value='test@example.com';email.dispatchEvent(new w.Event('input',{bubbles:true}));assert.equal(email.validationMessage,'');
+ dom.window.close();
+});
+test('hamburger, escape and route navigation keep menu state consistent',async()=>{
+ const {dom,w}=await setup({storedLang:'en'});const button=w.document.getElementById('hamburger');
+ button.click();assert.equal(button.getAttribute('aria-expanded'),'true');
+ w.document.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape'}));assert.equal(button.getAttribute('aria-expanded'),'false');
+ button.click();w.document.querySelector('#mobileNav [data-page="explore"]').click();await delay();
+ assert.equal(button.getAttribute('aria-expanded'),'false');dom.window.close();
+});
+test('translation catalog covers every literal translation key in app code',async()=>{
+ const {dom,w}=await setup();const acorn=require('acorn');const tree=acorn.parse(script,{ecmaVersion:'latest'});
+ function walk(n){if(!n||typeof n!=='object')return;
+  if(n.type==='CallExpression'&&n.callee.name==='t'&&n.arguments[0]?.type==='Literal'){
+   const key=n.arguments[0].value.replace(/\s+/g,' ').trim();const entry=w.DealBotI18n.messages[key];
+   assert.ok(entry?.fr&&entry?.en,'Missing translation: '+key);
+  }
+  Object.values(n).forEach(v=>Array.isArray(v)?v.forEach(walk):walk(v));
+ }
+ walk(tree);dom.window.close();
 });

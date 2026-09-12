@@ -8,6 +8,7 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",
+    "acorn": "8.15.0",
     "jsdom": "26.1.0"
   }
 }

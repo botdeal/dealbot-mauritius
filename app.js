@@ -1,5 +1,6 @@
 (function () {
   "use strict";
+  const t = window.DealBotI18n.t;
   /* =========================================================
      SUPABASE — CONFIGURATION
   ========================================================== */
@@ -8,7 +9,7 @@
   const SUPABASE_PUBLISHABLE_KEY = "sb_publishable__EqQ0t_cPDXO-bmsHzWERA_ZLAHck9d";
 
   if (!window.supabase || !window.DealBotBackend) {
-    document.getElementById('catalogStatus').querySelector('span').textContent='Le site n’a pas pu se charger. Rechargez la page.';
+    document.getElementById('catalogStatus').querySelector('span').textContent=t("Le site n’a pas pu se charger. Rechargez la page.");
     return;
   }
   const db = window.supabase.createClient(
@@ -89,7 +90,7 @@
       await loadCatalogFromSupabase();
     } catch (error) {
       if (revision === authRevision) {
-        showToast('Connexion aux données impossible. Réessayez.');
+        showToast(t("Connexion aux données impossible. Réessayez."));
         document.getElementById('retryAccount').hidden = !nextId;
       }
       console.error('Account restore failed', error.message);
@@ -100,7 +101,7 @@
     const revision = authRevision;
     const {data, error} = await db.auth.getSession();
     if (revision !== authRevision) return;
-    if (error) { showToast('Session indisponible. Réessayez.'); await restoreSession(null); return; }
+    if (error) { showToast(t("Session indisponible. Réessayez.")); await restoreSession(null); return; }
     await restoreSession(data.session);
   }
   // Never await Supabase calls inside onAuthStateChange (auth lock).
@@ -121,7 +122,7 @@
   favorites: "dealbot_favorites_v2",
   compare: "dealbot_compare_v2",
   alerts: "dealbot_alerts_v2",
-  language: "dealbot_language_v2",
+  language: window.DealBotI18n.storageKey,
   adminDeals: "dealbot_admin_deals_v2"
 };
 
@@ -175,8 +176,8 @@
   function showCatalogStatus() {
     const el = document.getElementById('catalogStatus');
     el.hidden = catalogState === 'ready' && DEALS.length > 0;
-    el.querySelector('span').textContent = catalogState === 'loading' ? 'Chargement des offres…' : catalogState === 'error'
-      ? 'Le catalogue est indisponible. Réessayez dans un instant.' : 'Aucune offre publiée pour le moment.';
+    el.querySelector('span').textContent = catalogState === 'loading' ? t("Chargement des offres…") : catalogState === 'error'
+      ? t("Le catalogue est indisponible. Réessayez dans un instant.") : t("Aucune offre publiée pour le moment.");
     el.querySelector('button').hidden = catalogState !== 'error';
   }
 
@@ -280,52 +281,40 @@
   }
 
   function availabilityText(status) {
-    if (status === "unknown") return state.lang === "en" ? "Stock unconfirmed" : "Stock non confirmé";
-    if (state.lang === "en") {
-      if (status === "limited") return "Limited stock";
-      if (status === "outofstock") return "Out of stock";
-      return "Available";
-    }
-
-    if (status === "limited") return "Stock limité";
-    if (status === "outofstock") return "Épuisé";
-    return "Disponible";
+    if (status === "unknown") return t("Stock non confirmé");
+    if (status === "limited") return t("Stock limité");
+    if (status === "outofstock") return t("Épuisé");
+    return t("Disponible");
   }
 
   function scoreQuality(score) {
     if (score >= 85) {
       return {
         className: "quality-top",
-        label: state.lang === "en"
-          ? "Strong"
-          : "Très intéressant"
+        label: t("Très intéressant")
       };
     }
 
     if (score >= 70) {
       return {
         className: "quality-good",
-        label: state.lang === "en"
-          ? "Good"
-          : "Intéressant"
+        label: t("Intéressant")
       };
     }
 
     return {
       className: "quality-fair",
-      label: state.lang === "en"
-        ? "Average"
-        : "À vérifier"
+      label: t("À vérifier")
     };
   }
 
   function estimatedTrend() {
-    return {className:'trend-stable',label:state.lang === 'en' ? 'See price history' : 'Voir l’historique'};
+    return {className:'trend-stable',label:t("Voir l’historique")};
   }
 
   function requireAccount() {
-    if (!currentUser) { openModal(loginModal); showToast('Connectez-vous pour enregistrer votre sélection.'); return false; }
-    if (!personalReady) { showToast('Chargement du compte en cours.'); return false; }
+    if (!currentUser) { openModal(loginModal); showToast(t("Connectez-vous pour enregistrer votre sélection.")); return false; }
+    if (!personalReady) { showToast(t("Chargement du compte en cours.")); return false; }
     return true;
   }
   function saveState() {
@@ -341,15 +330,15 @@
         const saved = await api.savePersonal(snapshot, confirmedPersonalState);
         if (revision === authRevision) {
           confirmedPersonalState = JSON.parse(JSON.stringify(saved || snapshot));
-          status.textContent = 'Enregistré dans votre compte';
+          status.textContent = t("Enregistré dans votre compte");
         }
         return true;
       } catch (error) {
         if (revision === authRevision) {
           saveGeneration++;
-          status.textContent = 'Échec de sauvegarde. Rechargez vos données avant de réessayer.';
+          status.textContent = t("Échec de sauvegarde. Rechargez vos données avant de réessayer.");
           personalReady = false;
-          showToast(error.code === '40001' ? 'Votre sélection a changé sur un autre appareil. La modification n’a pas été enregistrée.' : 'La modification n’a pas été enregistrée.');
+          showToast(error.code === '40001' ? t("Votre sélection a changé sur un autre appareil. La modification n’a pas été enregistrée.") : t("La modification n’a pas été enregistrée."));
           try { const data = await api.personal(userId); if (revision === authRevision) { confirmedPersonalState=JSON.parse(JSON.stringify(data)); Object.assign(state,data); personalReady=true; refreshCurrentPage(); } }
           catch { if (revision === authRevision) document.getElementById('retryAccount').hidden = false; }
         }
@@ -593,11 +582,11 @@ if (page === "admin") {
           type="button"
           class="save-toggle ${saved ? "saved" : ""}"
           data-save="${deal.id}"
-          aria-label="Enregistrer cette offre"
+          aria-label="${t("Enregistrer cette offre" )}"
         >
           ${saved
-            ? (state.lang === "en" ? "Saved" : "Enregistré")
-            : (state.lang === "en" ? "Save" : "Enregistrer")}
+            ? (t("Enregistré"))
+            : (t("Enregistrer"))}
         </button>
 
         <span class="thumb-mark">
@@ -646,9 +635,7 @@ if (page === "admin") {
 
         <div class="trend-row ${trend.className}">
           ${
-            state.lang === "en"
-              ? "Recent indication: "
-              : "Indication récente : "
+            t("Indication récente : ")
           }
           ${trend.label}
         </div>
@@ -680,9 +667,7 @@ if (page === "admin") {
           >
 
           ${
-            state.lang === "en"
-              ? "Compare"
-              : "Comparer"
+            t("Comparer")
           }
 
         </label>
@@ -695,9 +680,7 @@ if (page === "admin") {
             data-detail="${deal.id}"
           >
             ${
-              state.lang === "en"
-                ? "Details"
-                : "Détails"
+              t("Détails")
             }
           </button>
 
@@ -707,9 +690,7 @@ if (page === "admin") {
             data-price-alert="${deal.id}"
           >
             ${
-              state.lang === "en"
-                ? "Price alert"
-                : "Alerte prix"
+              t("Alerte prix")
             }
           </button>
 
@@ -814,17 +795,13 @@ if (page === "admin") {
       state.favorites.push(id);
 
       showToast(
-        state.lang === "en"
-          ? "Saving favorites…"
-          : "Mise à jour des favoris…"
+        t("Mise à jour des favoris…")
       );
     } else {
       state.favorites.splice(index, 1);
 
       showToast(
-        state.lang === "en"
-          ? "Deal removed from favorites."
-          : "Offre retirée des favoris."
+        t("Offre retirée des favoris.")
       );
     }
 
@@ -870,10 +847,10 @@ if (page === "admin") {
   function unavailableSelection(remove) {
     const item = document.createElement('article'); item.className = 'state-box';
     const label = document.createElement('p');
-    label.textContent = state.lang === 'en' ? 'This offer is unavailable in the current catalog.' : 'Cette offre est indisponible dans le catalogue actuel.';
+    label.textContent = t("Cette offre est indisponible dans le catalogue actuel.");
     const button = document.createElement('button'); button.type = 'button'; button.className = 'btn ghost small';
     button.dataset.removeUnavailable = '';
-    button.textContent = state.lang === 'en' ? 'Remove from selection' : 'Retirer de la sélection';
+    button.textContent = t("Retirer de la sélection");
     button.addEventListener('click', remove); item.append(label, button); return item;
   }
 
@@ -986,13 +963,7 @@ if (page === "admin") {
         <span class="category-count">
           ${total}
           ${
-            state.lang === "en"
-              ? total === 1
-                ? "deal"
-                : "deals"
-              : total === 1
-                ? "offre"
-                : "offres"
+            t(total === 1 ? "offre" : "offres")
           }
         </span>
       `;
@@ -1055,9 +1026,7 @@ if (page === "admin") {
     categorySelect.innerHTML = `
       <option value="">
         ${
-          state.lang === "en"
-            ? "All categories"
-            : "Toutes les catégories"
+          t("Toutes les catégories")
         }
       </option>
     `;
@@ -1087,9 +1056,7 @@ if (page === "admin") {
     storeSelect.innerHTML = `
       <option value="">
         ${
-          state.lang === "en"
-            ? "All sellers"
-            : "Tous les vendeurs"
+          t("Tous les vendeurs")
         }
       </option>
     `;
@@ -1107,9 +1074,7 @@ if (page === "admin") {
     alertSelect.innerHTML = `
       <option value="">
         ${
-          state.lang === "en"
-            ? "Select a product"
-            : "Sélectionner un produit"
+          t("Sélectionner un produit")
         }
       </option>
     `;
@@ -1346,13 +1311,7 @@ if (page === "admin") {
         list.length +
         " " +
         (
-          state.lang === "en"
-            ? list.length === 1
-              ? "deal"
-              : "deals"
-            : list.length === 1
-              ? "offre"
-              : "offres"
+          t(list.length === 1 ? "offre" : "offres")
         );
 
       if (!list.length) {
@@ -1604,9 +1563,7 @@ if (page === "admin") {
 
     if (!deal) {
       showToast(
-        state.lang === "en"
-          ? "This deal no longer exists."
-          : "Cette offre n'existe plus."
+        t("Cette offre n'existe plus.")
       );
 
       return;
@@ -1633,11 +1590,11 @@ if (page === "admin") {
       container.innerHTML = `
         <div class="state-box">
           <h3>
-            Offre introuvable
+            ${t("Offre introuvable")}
           </h3>
 
           <p>
-            Cette offre n'est plus disponible.
+            ${t("Cette offre n'est plus disponible.")}
           </p>
 
           <button
@@ -1645,7 +1602,7 @@ if (page === "admin") {
             class="btn"
             id="dealMissingBack"
           >
-            Explorer les offres
+            ${t("Explorer les offres")}
           </button>
         </div>
       `;
@@ -1721,9 +1678,7 @@ if (page === "admin") {
 
         <div class="deal-store">
           ${
-            state.lang === "en"
-              ? "Seller: "
-              : "Vendeur : "
+            t("Vendeur : ")
           }
           ${escapeHTML(
             deal.store
@@ -1775,9 +1730,7 @@ if (page === "admin") {
           <div class="deal-fact">
             <span>
               ${
-                state.lang === "en"
-                  ? "Current price"
-                  : "Prix actuel"
+                t("Prix actuel")
               }
             </span>
 
@@ -1789,9 +1742,7 @@ if (page === "admin") {
           <div class="deal-fact">
             <span>
               ${
-                state.lang === "en"
-                  ? "Observed reference price"
-                  : "Prix de référence affiché"
+                t("Prix de référence affiché")
               }
             </span>
 
@@ -1803,9 +1754,7 @@ if (page === "admin") {
           <div class="deal-fact">
             <span>
               ${
-                state.lang === "en"
-                  ? "Discount"
-                  : "Réduction"
+                t("Réduction")
               }
             </span>
 
@@ -1827,9 +1776,7 @@ if (page === "admin") {
           <div class="deal-fact">
             <span>
               ${
-                state.lang === "en"
-                  ? "Availability"
-                  : "Disponibilité"
+                t("Disponibilité")
               }
             </span>
 
@@ -1856,9 +1803,7 @@ if (page === "admin") {
             }
           >
             ${
-              state.lang === "en"
-                ? "Go to seller"
-                : "Voir chez le vendeur"
+              t("Voir chez le vendeur")
             }
           </button>
 
@@ -1869,12 +1814,8 @@ if (page === "admin") {
           >
             ${
               saved
-                ? state.lang === "en"
-                  ? "Saved"
-                  : "Enregistré"
-                : state.lang === "en"
-                  ? "Save"
-                  : "Enregistrer"
+                ? t("Enregistré")
+                : t("Enregistrer")
             }
           </button>
 
@@ -1884,9 +1825,7 @@ if (page === "admin") {
             id="dealAlertButton"
           >
             ${
-              state.lang === "en"
-                ? "Price alert"
-                : "Alerte de prix"
+              t("Alerte de prix")
             }
           </button>
 
@@ -1900,24 +1839,22 @@ if (page === "admin") {
           "
         >
           ${
-            state.lang === "en"
-              ? "Prices and availability must be verified on the seller's website before purchase."
-              : "Le prix et la disponibilité doivent être vérifiés sur le site du vendeur avant l'achat."
+            t("Le prix et la disponibilité doivent être vérifiés sur le site du vendeur avant l'achat.")
           }
         </p>
 
       </div>
     `;
 
-    const history = document.createElement('div'); history.className='state-box'; history.textContent='Chargement de l’historique…'; container.appendChild(history);
+    const history = document.createElement('div'); history.className='state-box'; history.textContent=t("Chargement de l’historique…"); container.appendChild(history);
     api.history(deal.id).then(rows=> {
       history.replaceChildren();
-      const title=document.createElement('h3'); title.textContent='Historique des prix'; history.appendChild(title);
-      if (!rows.length) { history.append('Aucun historique disponible.'); return; }
+      const title=document.createElement('h3'); title.textContent=t("Historique des prix"); history.appendChild(title);
+      if (!rows.length) { history.append(t("Aucun historique disponible.")); return; }
       const list=document.createElement('ul');
-      rows.forEach(row=> { const item=document.createElement('li'); item.textContent=new Date(row.recorded_at).toLocaleDateString('fr-FR')+' — '+money(row.price,row.currency); list.appendChild(item); });
+      rows.forEach(row=> { const item=document.createElement('li'); item.textContent=new Date(row.recorded_at).toLocaleDateString(state.lang==='en'?'en-GB':'fr-FR')+' — '+money(row.price,row.currency); list.appendChild(item); });
       history.appendChild(list);
-    }).catch(()=>{history.textContent='Historique indisponible. Réessayez plus tard.';});
+    }).catch(()=>{history.textContent=t("Historique indisponible. Réessayez plus tard.");});
     document
       .getElementById(
         "dealSaveButton"
@@ -1959,7 +1896,7 @@ if (page === "admin") {
   }
 
   async function goToMerchant(deal) {
-    if (!deal.affiliateUrl) { showToast('Lien marchand indisponible.'); return; }
+    if (!deal.affiliateUrl) { showToast(t("Lien marchand indisponible.")); return; }
     try {
       let session = sessionStorage.getItem('dealbot_click_session');
       if (!session) { session = crypto.randomUUID(); sessionStorage.setItem('dealbot_click_session',session); }
@@ -1968,7 +1905,7 @@ if (page === "admin") {
       const url = window.DealBotBackend.safeUrl(await api.track(deal.id,session,source));
       if (!url) throw new Error('Invalid destination');
       window.location.assign(url);
-    } catch (error) { showToast('Impossible d’ouvrir le marchand. Réessayez.'); }
+    } catch (error) { showToast(t("Impossible d’ouvrir le marchand. Réessayez.")); }
   }
 
   document
@@ -1989,7 +1926,7 @@ if (page === "admin") {
   function toggleCompare(id) {
     if (!requireAccount()) return false;
     const selected = DEALS.filter(d=>state.compare.includes(d.id));
-    if (!state.compare.includes(id) && selected.some(d=>d.currency !== getDeal(id)?.currency)) { showToast("Comparez des offres dans la même devise."); return false; }
+    if (!state.compare.includes(id) && selected.some(d=>d.currency !== getDeal(id)?.currency)) { showToast(t("Comparez des offres dans la même devise.")); return false; }
     const index =
       state.compare.indexOf(id);
 
@@ -2011,9 +1948,7 @@ if (page === "admin") {
       MAX_COMPARE
     ) {
       showToast(
-        state.lang === "en"
-          ? "You can compare up to 4 deals."
-          : "Vous pouvez comparer 4 offres au maximum."
+        t("Vous pouvez comparer 4 offres au maximum.")
       );
 
       return false;
@@ -2106,12 +2041,8 @@ if (page === "admin") {
 
           ${
             selected
-              ? state.lang === "en"
-                ? "Selected"
-                : "Sélectionné"
-              : state.lang === "en"
-                ? "Compare"
-                : "Comparer"
+              ? t("Sélectionné")
+              : t("Comparer")
           }
 
         </label>
@@ -2156,11 +2087,7 @@ if (page === "admin") {
       MAX_COMPARE +
       " " +
       (
-        state.lang === "en"
-          ? "selected"
-          : count > 1
-            ? "sélectionnées"
-            : "sélectionnée"
+        t(count > 1 ? "sélectionnées" : "sélectionnée")
       );
 
     document.getElementById(
@@ -2233,9 +2160,7 @@ if (page === "admin") {
 
             <th>
               ${
-                state.lang === "en"
-                  ? "Criteria"
-                  : "Critère"
+                t("Critère")
               }
             </th>
 
@@ -2257,27 +2182,21 @@ if (page === "admin") {
         <tbody>
 
           ${row(
-            state.lang === "en"
-              ? "Price"
-              : "Prix",
+            t("Prix"),
             function (deal) {
               return money(deal.price, deal.currency);
             }
           )}
 
           ${row(
-            state.lang === "en"
-              ? "Reference price"
-              : "Ancien prix",
+            t("Ancien prix"),
             function (deal) {
               return money(deal.oldPrice, deal.currency);
             }
           )}
 
           ${row(
-            state.lang === "en"
-              ? "Discount"
-              : "Réduction",
+            t("Réduction"),
             function (deal) {
               return (
                 discount(deal) +
@@ -2287,9 +2206,7 @@ if (page === "admin") {
           )}
 
           ${row(
-            state.lang === "en"
-              ? "Seller"
-              : "Vendeur",
+            t("Vendeur"),
             function (deal) {
               return escapeHTML(
                 deal.store
@@ -2308,9 +2225,7 @@ if (page === "admin") {
           )}
 
           ${row(
-            state.lang === "en"
-              ? "Availability"
-              : "Disponibilité",
+            t("Disponibilité"),
             function (deal) {
               return availabilityText(
                 deal.availability
@@ -2463,11 +2378,11 @@ if (page === "admin") {
 
         </div>
 
-        <p>${state.lang==='en'?'Displayed discount':'Réduction affichée'} : ${discount(deal)} %.
+        <p>${t("Réduction affichée")} : ${discount(deal)} %.
         ${deal.scoreMethod==='automatic-v1'
-          ? (state.lang==='en'?'Automatic score v1: discount (50), stock (20), description/image (10), verified merchant (20).':'Score automatique v1 : réduction (50), stock (20), description/image (10), marchand vérifié (20).')
-          : (state.lang==='en'?'Editorial score entered by an administrator.':'Score éditorial saisi par l’administrateur.')}
-        ${state.lang==='en'?'No price prediction.':'Sans prédiction de prix.'}</p>
+          ? (t("Score automatique v1 : réduction (50), stock (20), description/image (10), marchand vérifié (20)."))
+          : (t("Score éditorial saisi par l’administrateur."))}
+        ${t("Sans prédiction de prix.")}</p>
         <button
           type="button"
           class="btn ghost small"
@@ -2475,9 +2390,7 @@ if (page === "admin") {
           style="margin-top:16px;"
         >
           ${
-            state.lang === "en"
-              ? "View deal"
-              : "Voir l'offre"
+            t("Voir l'offre")
           }
         </button>
       `;
@@ -2614,9 +2527,7 @@ if (page === "admin") {
           targetPrice <= 0
         ) {
           showToast(
-            state.lang === "en"
-              ? "Please enter a valid price."
-              : "Indiquez un prix valide."
+            t("Indiquez un prix valide.")
           );
 
           return;
@@ -2653,9 +2564,7 @@ if (page === "admin") {
         event.target.reset();
 
         showToast(
-          state.lang === "en"
-            ? "Saving price alert…"
-            : "Enregistrement de l’alerte…"
+          t("Enregistrement de l’alerte…")
         );
 
         renderAlerts();
@@ -2692,9 +2601,9 @@ if (page === "admin") {
         if (!deal) {
           const item = document.createElement('article'); item.className = 'alert-item';
           const label = document.createElement('span');
-          label.textContent = state.lang === 'en' ? 'This offer is no longer available.' : 'Cette offre n’est plus disponible.';
+          label.textContent = t("Cette offre n’est plus disponible.");
           const button = document.createElement('button'); button.type = 'button'; button.className = 'btn ghost small';
-          button.dataset.removeAlert = String(alert.id); button.textContent = state.lang === 'en' ? 'Remove' : 'Supprimer';
+          button.dataset.removeAlert = String(alert.id); button.textContent = t("Supprimer");
           item.append(label, button); list.appendChild(item); return;
         }
         const sameCurrency = !alert.currency || alert.currency === deal.currency;
@@ -2725,18 +2634,14 @@ if (page === "admin") {
               "
             >
               ${
-                state.lang === "en"
-                  ? "Target"
-                  : "Objectif"
+                t("Objectif")
               }:
               ${money(alert.targetPrice, alert.currency || deal.currency)}
 
               ·
 
               ${
-                state.lang === "en"
-                  ? "Current"
-                  : "Actuel"
+                t("Actuel")
               }:
               ${money(deal.price, deal.currency)}
 
@@ -2753,14 +2658,10 @@ if (page === "admin") {
               >
                 ${
                   !sameCurrency
-                    ? state.lang === 'en' ? 'Currency changed: update this alert' : 'Devise modifiée : actualisez cette alerte'
+                    ? t("Devise modifiée : actualisez cette alerte")
                     : reached
-                    ? state.lang === "en"
-                      ? "Target reached"
-                      : "Seuil atteint"
-                    : state.lang === "en"
-                      ? "Monitoring"
-                      : "En attente"
+                    ? t("Seuil atteint")
+                    : t("En attente")
                 }
               </strong>
             </div>
@@ -2773,9 +2674,7 @@ if (page === "admin") {
             data-remove-alert="${alert.id}"
           >
             ${
-              state.lang === "en"
-                ? "Remove"
-                : "Supprimer"
+              t("Supprimer")
             }
           </button>
         `;
@@ -2813,9 +2712,7 @@ if (page === "admin") {
             renderAlerts();
 
             showToast(
-              state.lang === "en"
-                ? "Alert removed."
-                : "Alerte supprimée."
+              t("Alerte supprimée.")
             );
           }
         );
@@ -2988,15 +2885,15 @@ if (page === "admin") {
       event.preventDefault();
       const email=document.getElementById(kind+'Email').value.trim();
       const password=document.getElementById(kind+'Password').value;
-      if(!email || !password || (kind==='signup' && password.length<12)) {showToast('Vérifiez les informations saisies (12 caractères minimum à l’inscription).');return;}
+      if(!email || !password || (kind==='signup' && password.length<12)) {showToast(t("Vérifiez les informations saisies (12 caractères minimum à l’inscription)."));return;}
       const button=event.target.querySelector('[type=submit]');if(button.disabled) return;button.disabled=true;
       try {
         const result=kind==='signup' ? await db.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname,data:{full_name:document.getElementById('signupName').value.trim()}}}) : await db.auth.signInWithPassword({email,password});
         if(result.error) throw result.error;
         event.target.reset();closeModal(kind==='signup'?signupModal:loginModal);
-        if(result.data.session) {await restoreSession(result.data.session);showToast('Connexion réussie.');}
-        else showToast('Vérifiez votre messagerie pour confirmer votre compte.');
-      } catch(error) {showToast(kind==='login' ? 'Connexion impossible. Vérifiez vos identifiants ou réessayez.' : 'Inscription impossible : '+error.message);}
+        if(result.data.session) {await restoreSession(result.data.session);showToast(t("Connexion réussie."));}
+        else showToast(t("Vérifiez votre messagerie pour confirmer votre compte."));
+      } catch(error) {showToast(kind==='login' ? t("Connexion impossible. Vérifiez vos identifiants ou réessayez.") : t('Connexion impossible. Vérifiez vos identifiants ou réessayez.'));}
       finally {button.disabled=false;}
     });
   }
@@ -3011,9 +2908,7 @@ if (page === "admin") {
     );
 
     showToast(
-      state.lang === "en"
-        ? "Unable to sign out."
-        : "Impossible de se déconnecter."
+      t("Impossible de se déconnecter.")
     );
 
     return;
@@ -3022,9 +2917,7 @@ if (page === "admin") {
   await restoreSession(null);
 
   showToast(
-    state.lang === "en"
-      ? "Logged out."
-      : "Déconnexion réussie."
+    t("Déconnexion réussie.")
   );
 
   console.log(
@@ -3059,15 +2952,13 @@ if (page === "admin") {
     accountButton.textContent =
       currentProfile?.full_name ||
       currentUser.email ||
-      "Mon compte";
+      t("Mon compte");
   } else {
     guest.hidden = false;
     account.hidden = true;
 
     accountButton.textContent =
-      state.lang === "en"
-        ? "My account"
-        : "Mon compte";
+      t("Mon compte");
   }
 }
 
@@ -3160,26 +3051,26 @@ const accountButton =
       await apiChecked(db.from('contact_messages').insert({user_id:currentUser.id,
         name:document.getElementById('contactName').value.trim(),email:document.getElementById('contactEmail').value.trim(),
         message:document.getElementById('contactMessage').value.trim()}));
-      event.target.reset(); showToast('Message reçu. Il est disponible pour l’administrateur.');
-    } catch(error) { showToast('Message non envoyé : '+error.message); } finally { button.disabled=false; }
+      event.target.reset(); showToast(t("Message reçu. Il est disponible pour l’administrateur."));
+    } catch(error) { showToast(t('Demande impossible. Réessayez plus tard.')); } finally { button.disabled=false; }
   });
   document.getElementById('forgotPassword').addEventListener('click',async()=>{
     const input=document.getElementById('loginEmail');
-    if (!input.value || !input.checkValidity()) { input.focus(); showToast('Indiquez votre adresse email.'); return; }
+    if (!input.value || !input.checkValidity()) { input.focus(); showToast(t("Indiquez votre adresse email.")); return; }
     const button=document.getElementById('forgotPassword'); button.disabled=true;
     try {
       const {error}=await db.auth.resetPasswordForEmail(input.value.trim(),{redirectTo:location.origin+location.pathname});
       if(error) throw error;
-      showToast('Si un compte existe, un lien de réinitialisation sera envoyé.');
-    } catch { showToast('Demande impossible. Réessayez plus tard.'); } finally { button.disabled=false; }
+      showToast(t("Si un compte existe, un lien de réinitialisation sera envoyé."));
+    } catch { showToast(t("Demande impossible. Réessayez plus tard.")); } finally { button.disabled=false; }
   });
   document.getElementById('recoveryForm').addEventListener('submit',async event=>{
     event.preventDefault(); const password=document.getElementById('recoveryPassword').value;
     if(password.length<12) return;
     const button=event.target.querySelector('[type=submit]');button.disabled=true;
     try { const {error}=await db.auth.updateUser({password}); if(error) throw error;
-      event.target.reset();closeModal(document.getElementById('recoveryModal'));showToast('Mot de passe modifié.');
-    } catch { showToast('Lien expiré ou modification impossible. Demandez un nouveau lien.'); } finally { button.disabled=false; }
+      event.target.reset();closeModal(document.getElementById('recoveryModal'));showToast(t("Mot de passe modifié."));
+    } catch { showToast(t("Lien expiré ou modification impossible. Demandez un nouveau lien.")); } finally { button.disabled=false; }
   });
   document.getElementById('profileForm').addEventListener('submit',async event=>{
     event.preventDefault(); if(!requireAccount()) return;
@@ -3188,8 +3079,8 @@ const accountButton =
     try { const profile=await apiChecked(db.from('profiles').update({full_name:document.getElementById('editProfileName').value.trim()}).eq('id',userId).select('*').single());
       if(revision!==authRevision) return;
       currentProfile=profile;
-      updateAccountUI();renderProfile();showToast('Profil enregistré.');
-    } catch { if(revision===authRevision) showToast('Profil non enregistré.'); } finally { button.disabled=false; }
+      updateAccountUI();renderProfile();showToast(t("Profil enregistré."));
+    } catch { if(revision===authRevision) showToast(t("Profil non enregistré.")); } finally { button.disabled=false; }
   });
   async function renderAdminMessages() {
     const revision=authRevision;
@@ -3197,10 +3088,10 @@ const accountButton =
     try {
       const messages=await apiChecked(db.from('contact_messages').select('name,email,message,created_at').order('created_at',{ascending:false}).limit(50));
       if(revision!==authRevision || currentProfile?.role!=='admin') return;
-      target.replaceChildren();const title=document.createElement('h3');title.textContent='Messages reçus';target.appendChild(title);
-      if(!messages.length) target.append('Aucun message.');
+      target.replaceChildren();const title=document.createElement('h3');title.textContent=t("Messages reçus");target.appendChild(title);
+      if(!messages.length) target.append(t("Aucun message."));
       messages.forEach(m=>{const item=document.createElement('p');item.textContent=m.name+' — '+m.email+' : '+m.message;target.appendChild(item);});
-    } catch { if(revision===authRevision && currentProfile?.role==='admin') target.textContent='Messages indisponibles.'; }
+    } catch { if(revision===authRevision && currentProfile?.role==='admin') target.textContent=t("Messages indisponibles."); }
   }
   async function loadAds() {
     try {
@@ -3209,8 +3100,8 @@ const accountButton =
         const slot=slots.find(s=>s.location===el.dataset.adLocation && s.is_active);
         const ad=ads.find(a=>a.slot_id===slot?.id && a.status==='active' && (!a.starts_at || Date.parse(a.starts_at)<=Date.now()) && (!a.ends_at || Date.parse(a.ends_at)>Date.now()));
         el.replaceChildren();const url=window.DealBotBackend.safeUrl(ad?.destination_url);
-        if(!ad || !url) {el.textContent='Espace partenaire disponible';return;}
-        const label=document.createElement('span');label.textContent='Publicité · '+ad.advertiser_name;
+        if(!ad || !url) {el.textContent=t("Espace partenaire disponible");return;}
+        const label=document.createElement('span');label.textContent=t("Publicité · ")+ad.advertiser_name;
         const link=document.createElement('a');link.href=url;link.rel='sponsored noopener noreferrer';link.textContent=ad.title || ad.advertiser_name;
         const image=window.DealBotBackend.safeUrl(ad.image_url);
         if(image) {const img=document.createElement('img');img.src=image;img.alt=ad.title||ad.advertiser_name;img.loading='lazy';img.referrerPolicy='no-referrer';img.style.maxHeight='160px';img.onerror=()=>img.remove();link.appendChild(img);}
@@ -3220,9 +3111,7 @@ const accountButton =
   }
   /* =========================================================
      LANGUAGE
-     Le contenu dynamique bascule immédiatement.
-     Les textes statiques FR resteront traduits progressivement
-     lorsque le backend / système i18n complet sera branché.
+     Traductions centralisées dans i18n.js ; textes statiques explicitement balisés.
   ========================================================== */
 
   function setLanguage(lang) {
@@ -3234,6 +3123,8 @@ const accountButton =
     }
 
     state.lang = lang;
+    window.DealBotI18n.setLanguage(lang);
+    updateAccountUI();
 
     preferences.setItem(
       STORAGE.language,
@@ -3258,11 +3149,12 @@ const accountButton =
 
     populateFilters();
     refreshCurrentPage();
+    showCatalogStatus();
+    loadAds();
+    document.querySelectorAll("input,textarea,select").forEach(el=>el.setCustomValidity(""));
 
     showToast(
-      lang === "en"
-        ? "English selected."
-        : "Français sélectionné."
+      t("Français sélectionné.")
     );
   }
 
@@ -3384,9 +3276,7 @@ async function renderAdmin() {
       updateAccountUI();
 
       showToast(
-        state.lang === "en"
-          ? "Administrator access required."
-          : "Accès administrateur requis."
+        t("Accès administrateur requis.")
       );
 
       updateHash("home");
@@ -3406,9 +3296,7 @@ async function renderAdmin() {
       currentProfile.role !== "admin"
     ) {
       showToast(
-        state.lang === "en"
-          ? "Administrator access required."
-          : "Accès administrateur requis."
+        t("Accès administrateur requis.")
       );
 
       updateHash("home");
@@ -3508,7 +3396,7 @@ async function renderAdmin() {
             class="btn ghost small"
             data-admin-edit="${deal.id}"
           >
-            Modifier
+            ${t("Modifier")}
           </button>
 
           <button
@@ -3516,7 +3404,7 @@ async function renderAdmin() {
             class="btn ghost small"
             data-admin-delete="${deal.id}"
           >
-            Supprimer
+            ${t("Supprimer")}
           </button>
 
         </div>
@@ -3575,8 +3463,8 @@ function openAdminDealEditor(id) {
     "adminDealTitle"
   ).textContent =
     deal
-      ? "Modifier l'offre"
-      : "Ajouter une offre";
+      ? t("Modifier l'offre")
+      : t("Ajouter une offre");
 
   document.getElementById(
     "adminDealId"
@@ -3652,9 +3540,9 @@ function openAdminDealEditor(id) {
 
 async function deleteAdminDeal(id) {
   if (currentProfile?.role !== 'admin') return;
-  if (!window.confirm('Archiver cette offre ? Son historique sera conservé.')) return;
-  try { await api.archiveDeal(id); await loadCatalogFromSupabase(); showToast('Offre archivée.'); }
-  catch { showToast('Échec de l’archivage. Réessayez.'); }
+  if (!window.confirm(t("Archiver cette offre ? Son historique sera conservé."))) return;
+  try { await api.archiveDeal(id); await loadCatalogFromSupabase(); showToast(t("Offre archivée.")); }
+  catch { showToast(t("Échec de l’archivage. Réessayez.")); }
 }
 
 document.getElementById(
@@ -3690,14 +3578,14 @@ document.getElementById(
 
 adminDealForm.addEventListener('submit', async function(event) {
   event.preventDefault();
-  if (currentProfile?.role !== 'admin') { showToast('Accès administrateur requis.'); return; }
+  if (currentProfile?.role !== 'admin') { showToast(t("Accès administrateur requis.")); return; }
   const value = id => document.getElementById(id).value.trim();
   const url = value('adminDealUrl'), image = value('adminDealImage');
   const affiliateUrl = value('adminDealAffiliate');
-  if ([url,image,affiliateUrl].some(link => link && !window.DealBotBackend.safeUrl(link))) { showToast('Utilisez une URL HTTPS valide.'); return; }
+  if ([url,image,affiliateUrl].some(link => link && !window.DealBotBackend.safeUrl(link))) { showToast(t("Utilisez une URL HTTPS valide.")); return; }
   const startsAt = value('adminDealStart') ? new Date(value('adminDealStart')+'Z').toISOString() : null;
   const expiresAt = value('adminDealExpiry') ? new Date(value('adminDealExpiry')+'Z').toISOString() : null;
-  if (startsAt && expiresAt && startsAt >= expiresAt) { showToast('L’expiration doit être après le début de publication.'); return; }
+  if (startsAt && expiresAt && startsAt >= expiresAt) { showToast(t("L’expiration doit être après le début de publication.")); return; }
   const button = adminDealForm.querySelector('[type=submit]'); button.disabled = true;
   try {
     await api.saveDeal({id:value('adminDealId') || null,name:value('adminDealName'),store:value('adminDealStore'),
@@ -3707,8 +3595,8 @@ adminDealForm.addEventListener('submit', async function(event) {
       affiliateUrl,startsAt,expiresAt,featured:document.getElementById('adminDealFeatured').checked});
     closeModal(adminDealModal);
     await loadCatalogFromSupabase();
-    showToast('Offre enregistrée dans Supabase.');
-  } catch(error) { showToast('Enregistrement impossible : '+error.message); }
+    showToast(t("Offre enregistrée dans Supabase."));
+  } catch(error) { showToast(t('Profil non enregistré.')); }
   finally { button.disabled=false; }
 });
   /* =========================================================
@@ -3779,6 +3667,7 @@ adminDealForm.addEventListener('submit', async function(event) {
   ========================================================== */
 
   function init() {
+    state.lang = window.DealBotI18n.setLanguage(state.lang);
     document.documentElement.lang =
       state.lang;
 

@@ -5,7 +5,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>DealBot — Comparateur et suivi de bonnes affaires</title>
+  <title data-i18n="DealBot — Comparateur et suivi de bonnes affaires">DealBot — Comparateur et suivi de bonnes affaires</title>
 
   <meta
     name="description"
@@ -1851,6 +1851,19 @@
     .table-wrap { overflow-x:auto; }
     :focus-visible { outline:3px solid #136e5e; outline-offset:3px; }
     @media(max-width:600px) { .modal-box { max-height:90vh; overflow-y:auto; } .deal-info { min-width:0; } }
+    /* Keep long translated labels and account names within their containers. */
+    .header-inner > *, .header-actions, .account-box, .product-card,
+    .compare-pick-card, .deal-info, .admin-form-grid > *, .form-group { min-width: 0; }
+    #accountButton { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .product-title, .category-name, .deal-info h1, .prose, .state-box, .modal-box { overflow-wrap: anywhere; }
+    input, select, textarea { max-width: 100%; }
+    .table-scroll, .admin-table-wrap { max-width: 100%; overscroll-behavior-x: contain; }
+    @media(max-width:620px) {
+      #accountButton { max-width: 120px; }
+      .modal-box { max-height: calc(100dvh - 32px); }
+      .mobile-nav { max-height: calc(100dvh - 60px); }
+      .compare-bar .btn { white-space: normal; }
+    }
   </style>
   <!-- Supabase JavaScript Client -->
 <script src="vendor/supabase-2.116.0.js"></script>
@@ -1861,9 +1874,9 @@
 
 </head>
   <body>
-  <div id="catalogStatus" role="status" style="padding:12px 5%;background:#f4f7f6"><span>Chargement des offres…</span> <button type="button" class="btn small" hidden>Réessayer</button></div>
+  <div id="catalogStatus" role="status" style="padding:12px 5%;background:#f4f7f6"><span data-i18n="Chargement des offres…">Chargement des offres…</span> <button type="button" class="btn small" hidden data-i18n="Réessayer">Réessayer</button></div>
   <div id="saveStatus" role="status" aria-live="polite" style="padding:0 5%;font-size:.8rem"></div>
-  <button id="retryAccount" class="btn ghost small" type="button" hidden style="margin:8px 5%;">Réessayer le chargement du compte</button>
+  <button id="retryAccount" class="btn ghost small" type="button" hidden style="margin:8px 5%;" data-i18n="Réessayer le chargement du compte">Réessayer le chargement du compte</button>
 
   <!-- =========================
        HEADER
@@ -1872,28 +1885,28 @@
   <header class="site-header">
     <div class="container header-inner">
 
-      <a href="#home" class="logo" data-page="home" aria-label="DealBot accueil">
+      <a href="#home" class="logo" data-page="home" aria-label="DealBot accueil" data-i18n-aria-label="DealBot accueil">
         Deal<em>Bot</em>
       </a>
 
-      <nav class="main-nav" aria-label="Navigation principale">
-        <a href="#explore" data-page="explore">Explorer les offres</a>
-        <a href="#categories" data-page="categories">Catégories</a>
-        <a href="#compare" data-page="compare">Comparer</a>
+      <nav class="main-nav" aria-label="Navigation principale" data-i18n-aria-label="Navigation principale">
+        <a href="#explore" data-page="explore" data-i18n="Explorer les offres">Explorer les offres</a>
+        <a href="#categories" data-page="categories" data-i18n="Catégories">Catégories</a>
+        <a href="#compare" data-page="compare" data-i18n="Comparer">Comparer</a>
         <a href="#intelligence" data-page="intelligence">DealBot Intelligence</a>
-        <a href="#favorites" data-page="favorites">Favoris</a>
-        <a href="#alerts" data-page="alerts">Alertes de prix</a>
+        <a href="#favorites" data-page="favorites" data-i18n="Favoris">Favoris</a>
+        <a href="#alerts" data-page="alerts" data-i18n="Alertes de prix">Alertes de prix</a>
       </nav>
 
       <div class="header-actions">
 
-        <div class="lang-switch" aria-label="Choisir la langue">
+        <div class="lang-switch" aria-label="Choisir la langue" data-i18n-aria-label="Choisir la langue">
           <button
             type="button"
             class="active"
             data-lang-switch="fr"
             aria-label="Français"
-          >
+           data-i18n-aria-label="Français">
             FR
           </button>
 
@@ -1901,7 +1914,7 @@
             type="button"
             data-lang-switch="en"
             aria-label="English"
-          >
+           data-i18n-aria-label="English">
             EN
           </button>
         </div>
@@ -1912,7 +1925,7 @@
             type="button"
             class="btn ghost small"
             id="openLogin"
-          >
+           data-i18n="Connexion">
             Connexion
           </button>
 
@@ -1920,7 +1933,7 @@
             type="button"
             class="btn small"
             id="openSignup"
-          >
+           data-i18n="Créer un compte">
             Créer un compte
           </button>
         </div>
@@ -1936,7 +1949,7 @@
             class="btn ghost small"
             id="accountButton"
             aria-expanded="false"
-          >
+           data-i18n="Mon compte">
             Mon compte
           </button>
 
@@ -1944,20 +1957,20 @@
             class="account-menu"
             id="accountMenu"
           >
-            <a href="#profile" data-page="profile">
+            <a href="#profile" data-page="profile" data-i18n="Profil">
               Profil
             </a>
 
-            <a href="#favorites" data-page="favorites">
+            <a href="#favorites" data-page="favorites" data-i18n="Favoris">
               Favoris
             </a>
 
-            <a href="#alerts" data-page="alerts">
+            <a href="#alerts" data-page="alerts" data-i18n="Alertes de prix">
               Alertes de prix
             </a>
 
             <a href="#admin" id="adminAccountLink" data-page="admin" hidden>Administration</a>
-<button type="button" id="logoutButton">
+<button type="button" id="logoutButton" data-i18n="Déconnexion">
               Déconnexion
             </button>
           </div>
@@ -1969,7 +1982,7 @@
           id="hamburger"
           aria-label="Ouvrir le menu"
           aria-expanded="false"
-        >
+         data-i18n-aria-label="Ouvrir le menu">
           <span></span>
           <span></span>
           <span></span>
@@ -1984,16 +1997,16 @@
       class="mobile-nav"
       id="mobileNav"
       aria-label="Navigation mobile"
-    >
-      <a href="#explore" data-page="explore">
+     data-i18n-aria-label="Navigation mobile">
+      <a href="#explore" data-page="explore" data-i18n="Explorer les offres">
         Explorer les offres
       </a>
 
-      <a href="#categories" data-page="categories">
+      <a href="#categories" data-page="categories" data-i18n="Catégories">
         Catégories
       </a>
 
-      <a href="#compare" data-page="compare">
+      <a href="#compare" data-page="compare" data-i18n="Comparer">
         Comparer
       </a>
 
@@ -2001,29 +2014,29 @@
         DealBot Intelligence
       </a>
 
-      <a href="#favorites" data-page="favorites">
+      <a href="#favorites" data-page="favorites" data-i18n="Favoris">
         Favoris
       </a>
 
-      <a href="#alerts" data-page="alerts">
+      <a href="#alerts" data-page="alerts" data-i18n="Alertes de prix">
         Alertes de prix
       </a>
 
-      <a href="#how" data-page="how">
+      <a href="#how" data-page="how" data-i18n="Comment ça marche">
         Comment ça marche
       </a>
 
       <button
         type="button"
         id="mobileLogin"
-      >
+       data-i18n="Connexion">
         Connexion
       </button>
 
       <button
         type="button"
         id="mobileSignup"
-      >
+       data-i18n="Créer un compte">
         Créer un compte
       </button>
     </nav>
@@ -2048,15 +2061,15 @@
         <div class="container hero-grid">
 
           <div>
-            <span class="eyebrow">
+            <span class="eyebrow" data-i18n="Comparaison · Suivi · Analyse">
               Comparaison · Suivi · Analyse
             </span>
 
-            <h1>
+            <h1 data-i18n="Trouvez de meilleures offres avant d'acheter.">
               Trouvez de meilleures offres avant d'acheter.
             </h1>
 
-            <p class="hero-lead">
+            <p class="hero-lead" data-i18n="DealBot rassemble, compare et suit les prix pour vous aider à évaluer une offre avant de l'acheter — sans battage, avec des données claires.">
               DealBot rassemble, compare et suit les prix
               pour vous aider à évaluer une offre avant
               de l'acheter — sans battage, avec des données claires.
@@ -2065,17 +2078,17 @@
             <div class="hero-ledger">
 
               <div>
-                <span>OFFRES SUIVIES</span>
+                <span data-i18n="OFFRES SUIVIES">OFFRES SUIVIES</span>
                 <strong id="statDeals">0</strong>
               </div>
 
               <div>
-                <span>CATÉGORIES</span>
+                <span data-i18n="CATÉGORIES">CATÉGORIES</span>
                 <strong id="statCategories">0</strong>
               </div>
 
               <div>
-                <span>VENDEURS RÉFÉRENCÉS</span>
+                <span data-i18n="VENDEURS RÉFÉRENCÉS">VENDEURS RÉFÉRENCÉS</span>
                 <strong id="statStores">0</strong>
               </div>
 
@@ -2087,7 +2100,7 @@
 
           <div class="search-panel">
 
-            <label for="heroSearch">
+            <label for="heroSearch" data-i18n="Que recherchez-vous ?">
               Que recherchez-vous ?
             </label>
 
@@ -2098,13 +2111,13 @@
                 id="heroSearch"
                 autocomplete="off"
                 placeholder="Produit, marque ou catégorie..."
-              >
+               data-i18n-placeholder="Produit, marque ou catégorie...">
 
               <button
                 type="button"
                 class="btn"
                 id="heroSearchButton"
-              >
+               data-i18n="Rechercher">
                 Rechercher
               </button>
 
@@ -2116,25 +2129,15 @@
                 iPhone
               </button>
 
-              <button type="button" data-search="laptop">
-                Laptop
-              </button>
+              <button type="button" data-search="laptop"><span data-i18n="Laptop">Laptop</span></button>
 
-              <button type="button" data-search="sneakers">
-                Sneakers
-              </button>
+              <button type="button" data-search="sneakers"><span data-i18n="Sneakers">Sneakers</span></button>
 
-              <button type="button" data-search="headphones">
-                Headphones
-              </button>
+              <button type="button" data-search="headphones"><span data-i18n="Headphones">Headphones</span></button>
 
-              <button type="button" data-search="hotel">
-                Hotel
-              </button>
+              <button type="button" data-search="hotel"><span data-i18n="Hotel">Hotel</span></button>
 
-              <button type="button" data-search="software">
-                Software
-              </button>
+              <button type="button" data-search="software"><span data-i18n="Software">Software</span></button>
 
             </div>
 
@@ -2153,7 +2156,7 @@
             class="ad-slot horizontal"
             id="homeAdTop" data-ad-location="home_top"
             aria-label="Espace publicitaire"
-          >
+           data-i18n="Espace partenaire" data-i18n-aria-label="Espace publicitaire">
             Espace partenaire
           </div>
 
@@ -2169,11 +2172,11 @@
           <div class="section-head">
 
             <div>
-              <span class="eyebrow">
+              <span class="eyebrow" data-i18n="Sélection">
                 Sélection
               </span>
 
-              <h2>
+              <h2 data-i18n="Sélection du moment">
                 Sélection du moment
               </h2>
             </div>
@@ -2182,7 +2185,7 @@
               href="#explore"
               class="link-more"
               data-page="explore"
-            >
+             data-i18n="Voir toutes les offres">
               Voir toutes les offres
             </a>
 
@@ -2204,11 +2207,11 @@
             id="featuredEmpty"
             hidden
           >
-            <h3>
+            <h3 data-i18n="Aucune sélection disponible actuellement">
               Aucune sélection disponible actuellement
             </h3>
 
-            <p>
+            <p data-i18n="Les nouvelles offres apparaîtront ici après leur analyse par DealBot.">
               Les nouvelles offres apparaîtront ici
               après leur analyse par DealBot.
             </p>
@@ -2217,7 +2220,7 @@
               type="button"
               class="btn ghost"
               data-page="explore"
-            >
+             data-i18n="Explorer les offres">
               Explorer les offres
             </button>
           </div>
@@ -2238,7 +2241,7 @@
                 Navigation
               </span>
 
-              <h2>
+              <h2 data-i18n="Parcourir par catégorie">
                 Parcourir par catégorie
               </h2>
             </div>
@@ -2247,7 +2250,7 @@
               href="#categories"
               class="link-more"
               data-page="categories"
-            >
+             data-i18n="Toutes les catégories">
               Toutes les catégories
             </a>
 
@@ -2270,11 +2273,11 @@
 
           <div class="section-head">
             <div>
-              <span class="eyebrow">
+              <span class="eyebrow" data-i18n="Méthode">
                 Méthode
               </span>
 
-              <h2>
+              <h2 data-i18n="Comment fonctionne DealBot">
                 Comment fonctionne DealBot
               </h2>
             </div>
@@ -2288,11 +2291,11 @@
                 01
               </span>
 
-              <h3>
+              <h3 data-i18n="Découvrir">
                 Découvrir
               </h3>
 
-              <p>
+              <p data-i18n="Retrouvez des offres provenant de différentes boutiques et plateformes.">
                 Retrouvez des offres provenant
                 de différentes boutiques et plateformes.
               </p>
@@ -2304,11 +2307,11 @@
                 02
               </span>
 
-              <h3>
+              <h3 data-i18n="Comparer">
                 Comparer
               </h3>
 
-              <p>
+              <p data-i18n="Comparez les prix, réductions, vendeurs et données disponibles.">
                 Comparez les prix, réductions,
                 vendeurs et données disponibles.
               </p>
@@ -2320,11 +2323,11 @@
                 03
               </span>
 
-              <h3>
+              <h3 data-i18n="Suivre">
                 Suivre
               </h3>
 
-              <p>
+              <p data-i18n="Enregistrez vos offres et définissez le prix que vous souhaitez surveiller.">
                 Enregistrez vos offres et définissez
                 le prix que vous souhaitez surveiller.
               </p>
@@ -2336,11 +2339,11 @@
                 04
               </span>
 
-              <h3>
+              <h3 data-i18n="Acheter">
                 Acheter
               </h3>
 
-              <p>
+              <p data-i18n="Lorsque vous êtes prêt, accédez directement au vendeur pour finaliser l'achat.">
                 Lorsque vous êtes prêt, accédez
                 directement au vendeur pour finaliser l'achat.
               </p>
@@ -2366,15 +2369,15 @@
       <div class="container">
 
         <div class="page-header">
-          <span class="eyebrow">
+          <span class="eyebrow" data-i18n="Catalogue">
             Catalogue
           </span>
 
-          <h1>
+          <h1 data-i18n="Explorer les offres">
             Explorer les offres
           </h1>
 
-          <p>
+          <p data-i18n="Recherchez et filtrez les offres selon leur prix, leur catégorie, leur vendeur et leur DealBot Score.">
             Recherchez et filtrez les offres selon
             leur prix, leur catégorie, leur vendeur
             et leur DealBot Score.
@@ -2388,14 +2391,14 @@
 
           <aside class="filters">
 
-            <h3>
+            <h3 data-i18n="Filtres">
               Filtres
             </h3>
 
 
-<div class="filter-group"><label for="currencyFilter">Devise des prix</label><select id="currencyFilter"><option>MUR</option><option>EUR</option><option>USD</option><option>GBP</option></select></div>
+<div class="filter-group"><label for="currencyFilter" data-i18n="Devise des prix">Devise des prix</label><select id="currencyFilter"><option>MUR</option><option>EUR</option><option>USD</option><option>GBP</option></select></div>
             <div class="filter-group">
-              <label for="exploreSearch">
+              <label for="exploreSearch" data-i18n="Recherche">
                 Recherche
               </label>
 
@@ -2403,17 +2406,17 @@
                 type="search"
                 id="exploreSearch"
                 placeholder="Rechercher..."
-              >
+               data-i18n-placeholder="Rechercher...">
             </div>
 
 
             <div class="filter-group">
-              <label for="categoryFilter">
+              <label for="categoryFilter" data-i18n="Catégorie">
                 Catégorie
               </label>
 
               <select id="categoryFilter">
-                <option value="">
+                <option value="" data-i18n="Toutes les catégories">
                   Toutes les catégories
                 </option>
               </select>
@@ -2421,7 +2424,7 @@
 
 
             <div class="filter-group">
-              <label>
+              <label data-i18n="Prix">
                 Prix
               </label>
 
@@ -2432,47 +2435,47 @@
                   id="minPriceFilter"
                   min="0"
                   placeholder="Min."
-                >
+                 data-i18n-placeholder="Min.">
 
                 <input
                   type="number"
                   id="maxPriceFilter"
                   min="0"
                   placeholder="Max."
-                >
+                 data-i18n-placeholder="Max.">
 
               </div>
             </div>
 
 
             <div class="filter-group">
-              <label for="discountFilter">
+              <label for="discountFilter" data-i18n="Réduction minimum">
                 Réduction minimum
               </label>
 
               <select id="discountFilter">
 
-                <option value="0">
+                <option value="0" data-i18n="Toutes">
                   Toutes
                 </option>
 
-                <option value="10">
+                <option value="10" data-i18n="10 % et plus">
                   10 % et plus
                 </option>
 
-                <option value="20">
+                <option value="20" data-i18n="20 % et plus">
                   20 % et plus
                 </option>
 
-                <option value="30">
+                <option value="30" data-i18n="30 % et plus">
                   30 % et plus
                 </option>
 
-                <option value="40">
+                <option value="40" data-i18n="40 % et plus">
                   40 % et plus
                 </option>
 
-                <option value="50">
+                <option value="50" data-i18n="50 % et plus">
                   50 % et plus
                 </option>
 
@@ -2481,12 +2484,12 @@
 
 
             <div class="filter-group">
-              <label for="storeFilter">
+              <label for="storeFilter" data-i18n="Vendeur">
                 Vendeur
               </label>
 
               <select id="storeFilter">
-                <option value="">
+                <option value="" data-i18n="Tous les vendeurs">
                   Tous les vendeurs
                 </option>
               </select>
@@ -2494,13 +2497,13 @@
 
 
             <div class="filter-group">
-              <label for="scoreFilter">
+              <label for="scoreFilter" data-i18n="DealBot Score minimum">
                 DealBot Score minimum
               </label>
 
               <select id="scoreFilter">
 
-                <option value="0">
+                <option value="0" data-i18n="Tous">
                   Tous
                 </option>
 
@@ -2532,7 +2535,7 @@
               type="button"
               class="btn ghost block"
               id="resetFilters"
-            >
+             data-i18n="Réinitialiser">
               Réinitialiser
             </button>
 
@@ -2548,7 +2551,7 @@
               <span
                 class="result-count"
                 id="resultCount"
-              >
+               data-i18n="0 offre">
                 0 offre
               </span>
 
@@ -2557,25 +2560,25 @@
                 class="sort-select"
                 id="sortDeals"
                 aria-label="Trier les offres"
-              >
+               data-i18n-aria-label="Trier les offres">
 
-                <option value="score">
+                <option value="score" data-i18n="Meilleur DealBot Score">
                   Meilleur DealBot Score
                 </option>
 
-                <option value="discount">
+                <option value="discount" data-i18n="Plus forte réduction">
                   Plus forte réduction
                 </option>
 
-                <option value="price-asc">
+                <option value="price-asc" data-i18n="Prix croissant">
                   Prix croissant
                 </option>
 
-                <option value="price-desc">
+                <option value="price-desc" data-i18n="Prix décroissant">
                   Prix décroissant
                 </option>
 
-                <option value="recent">
+                <option value="recent" data-i18n="Plus récent">
                   Plus récent
                 </option>
 
@@ -2597,11 +2600,11 @@
               id="exploreEmpty"
               hidden
             >
-              <h3>
+              <h3 data-i18n="Aucune offre trouvée">
                 Aucune offre trouvée
               </h3>
 
-              <p>
+              <p data-i18n="Aucune offre ne correspond actuellement aux critères sélectionnés.">
                 Aucune offre ne correspond actuellement
                 aux critères sélectionnés.
               </p>
@@ -2610,7 +2613,7 @@
                 type="button"
                 class="btn ghost"
                 id="emptyResetFilters"
-              >
+               data-i18n="Réinitialiser les filtres">
                 Réinitialiser les filtres
               </button>
             </div>
@@ -2623,11 +2626,11 @@
               id="exploreError"
               hidden
             >
-              <h3>
+              <h3 data-i18n="Impossible de charger les offres">
                 Impossible de charger les offres
               </h3>
 
-              <p>
+              <p data-i18n="Une erreur est survenue pendant le chargement des données.">
                 Une erreur est survenue pendant
                 le chargement des données.
               </p>
@@ -2636,7 +2639,7 @@
                 type="button"
                 class="btn"
                 id="retryDeals"
-              >
+               data-i18n="Réessayer">
                 Réessayer
               </button>
             </div>
@@ -2651,7 +2654,7 @@
                 type="button"
                 class="btn ghost"
                 id="loadMoreDeals"
-              >
+               data-i18n="Voir plus d'offres">
                 Voir plus d'offres
               </button>
             </div>
@@ -2675,15 +2678,15 @@
       <div class="container">
 
         <div class="page-header">
-          <span class="eyebrow">
+          <span class="eyebrow" data-i18n="Catalogue">
             Catalogue
           </span>
 
-          <h1>
+          <h1 data-i18n="Catégories">
             Catégories
           </h1>
 
-          <p>
+          <p data-i18n="Parcourez les offres DealBot par univers.">
             Parcourez les offres DealBot
             par univers.
           </p>
@@ -2715,7 +2718,7 @@
           class="btn ghost small"
           id="backFromDeal"
           style="margin-bottom:24px"
-        >
+         data-i18n="← Retour aux offres">
           ← Retour aux offres
         </button>
 
@@ -2744,15 +2747,15 @@
 
         <div class="page-header">
 
-          <span class="eyebrow">
+          <span class="eyebrow" data-i18n="Comparateur">
             Comparateur
           </span>
 
-          <h1>
+          <h1 data-i18n="Comparer les offres">
             Comparer les offres
           </h1>
 
-          <p>
+          <p data-i18n="Sélectionnez jusqu'à quatre offres pour comparer leurs principales caractéristiques.">
             Sélectionnez jusqu'à quatre offres
             pour comparer leurs principales caractéristiques.
           </p>
@@ -2771,11 +2774,11 @@
           id="compareEmpty"
           hidden
         >
-          <h3>
+          <h3 data-i18n="Aucune offre disponible">
             Aucune offre disponible
           </h3>
 
-          <p>
+          <p data-i18n="Les produits disponibles pour comparaison apparaîtront ici.">
             Les produits disponibles pour comparaison
             apparaîtront ici.
           </p>
@@ -2784,7 +2787,7 @@
 
         <div class="compare-bar">
 
-          <span id="compareCount">
+          <span id="compareCount" data-i18n="0 / 4 sélectionnée">
             0 / 4 sélectionnée
           </span>
 
@@ -2794,7 +2797,7 @@
               type="button"
               class="btn ghost small"
               id="clearCompare"
-            >
+             data-i18n="Effacer">
               Effacer
             </button>
 
@@ -2803,7 +2806,7 @@
               class="btn small"
               id="runCompare"
               disabled
-            >
+             data-i18n="Voir le comparatif">
               Voir le comparatif
             </button>
 
@@ -2837,7 +2840,7 @@
 
         <div class="page-header">
 
-          <span class="eyebrow">
+          <span class="eyebrow" data-i18n="Analyse">
             Analyse
           </span>
 
@@ -2845,7 +2848,7 @@
             DealBot Intelligence
           </h1>
 
-          <p>
+          <p data-i18n="Une lecture structurée des données disponibles pour faciliter l'évaluation d'une offre.">
             Une lecture structurée des données disponibles
             pour faciliter l'évaluation d'une offre.
           </p>
@@ -2853,7 +2856,7 @@
         </div>
 
 
-        <div class="intel-note">
+        <div class="intel-note" data-i18n="Le DealBot Score peut être éditorial ou calculé automatiquement. La méthode est indiquée pour chaque offre, sans prédiction de prix. Il ne constitue ni une garantie de prix, ni une recommandation financière, ni une garantie sur le vendeur ou le produit.">
           Le DealBot Score peut être éditorial ou calculé automatiquement.
           La méthode est indiquée pour chaque offre, sans prédiction de prix. Il ne constitue
           ni une garantie de prix, ni une recommandation
@@ -2872,11 +2875,11 @@
           id="intelligenceEmpty"
           hidden
         >
-          <h3>
+          <h3 data-i18n="Pas encore assez de données">
             Pas encore assez de données
           </h3>
 
-          <p>
+          <p data-i18n="Les analyses apparaîtront lorsque DealBot disposera de suffisamment d'informations sur les offres suivies.">
             Les analyses apparaîtront lorsque DealBot
             disposera de suffisamment d'informations
             sur les offres suivies.
@@ -2900,15 +2903,15 @@
 
         <div class="page-header">
 
-          <span class="eyebrow">
+          <span class="eyebrow" data-i18n="Personnel">
             Personnel
           </span>
 
-          <h1>
+          <h1 data-i18n="Offres enregistrées">
             Offres enregistrées
           </h1>
 
-          <p>
+          <p data-i18n="Retrouvez ici les offres que vous avez sauvegardées.">
             Retrouvez ici les offres
             que vous avez sauvegardées.
           </p>
@@ -2926,11 +2929,11 @@
           class="state-box"
           id="favoritesEmpty"
         >
-          <h3>
+          <h3 data-i18n="Aucun favori pour le moment">
             Aucun favori pour le moment
           </h3>
 
-          <p>
+          <p data-i18n="Enregistrez une offre pour la retrouver rapidement ici.">
             Enregistrez une offre pour
             la retrouver rapidement ici.
           </p>
@@ -2939,7 +2942,7 @@
             type="button"
             class="btn"
             data-page="explore"
-          >
+           data-i18n="Explorer les offres">
             Explorer les offres
           </button>
         </div>
@@ -2961,15 +2964,15 @@
 
         <div class="page-header">
 
-          <span class="eyebrow">
+          <span class="eyebrow" data-i18n="Surveillance">
             Surveillance
           </span>
 
-          <h1>
+          <h1 data-i18n="Alertes de prix">
             Alertes de prix
           </h1>
 
-          <p>
+          <p data-i18n="Définissez un prix cible pour les produits que vous souhaitez suivre.">
             Définissez un prix cible pour
             les produits que vous souhaitez suivre.
           </p>
@@ -2983,7 +2986,7 @@
         >
 
           <div>
-            <label for="alertProduct">
+            <label for="alertProduct" data-i18n="Produit">
               Produit
             </label>
 
@@ -2991,7 +2994,7 @@
               id="alertProduct"
               required
             >
-              <option value="">
+              <option value="" data-i18n="Sélectionner un produit">
                 Sélectionner un produit
               </option>
             </select>
@@ -2999,7 +3002,7 @@
 
 
           <div>
-            <label for="alertPrice">
+            <label for="alertPrice" data-i18n="Prix cible">
               Prix cible
             </label>
 
@@ -3010,14 +3013,14 @@
               step="0.01"
               placeholder="Ex. 499"
               required
-            >
+             data-i18n-placeholder="Ex. 499">
           </div>
 
 
           <button
             type="submit"
             class="btn"
-          >
+           data-i18n="Créer l'alerte">
             Créer l'alerte
           </button>
 
@@ -3034,11 +3037,11 @@
           class="state-box"
           id="alertsEmpty"
         >
-          <h3>
+          <h3 data-i18n="Aucune alerte active">
             Aucune alerte active
           </h3>
 
-          <p>
+          <p data-i18n="Créez votre première alerte pour commencer à suivre un prix.">
             Créez votre première alerte pour
             commencer à suivre un prix.
           </p>
@@ -3061,11 +3064,11 @@
 
         <div class="page-header">
 
-          <span class="eyebrow">
+          <span class="eyebrow" data-i18n="Compte">
             Compte
           </span>
 
-          <h1>
+          <h1 data-i18n="Mon profil">
             Mon profil
           </h1>
 
@@ -3075,26 +3078,26 @@
         <div class="content-card">
 
           <p>
-            <strong>Nom :</strong>
+            <strong data-i18n="Nom :">Nom :</strong>
             <span id="profileName">—</span>
           </p>
 
           <p>
-            <strong>Email :</strong>
+            <strong data-i18n="Email :">Email :</strong>
             <span id="profileEmail">—</span>
           </p>
 
           <p>
-            <strong>Favoris :</strong>
+            <strong data-i18n="Favoris :">Favoris :</strong>
             <span id="profileFavorites">0</span>
           </p>
 
           <p>
-            <strong>Alertes actives :</strong>
+            <strong data-i18n="Alertes actives :">Alertes actives :</strong>
             <span id="profileAlerts">0</span>
           </p>
 
-        <form id="profileForm"><label>Nom <input id="editProfileName" maxlength="150" required></label><button type="submit" class="btn small">Enregistrer le profil</button></form></div>
+        <form id="profileForm"><label><span data-i18n="Nom">Nom </span><input id="editProfileName" maxlength="150" required></label><button type="submit" class="btn small" data-i18n="Enregistrer le profil">Enregistrer le profil</button></form></div>
 
       </div>
     </section>
@@ -3117,11 +3120,11 @@
             DealBot
           </span>
 
-          <h1>
+          <h1 data-i18n="Comment ça marche">
             Comment ça marche
           </h1>
 
-          <p>
+          <p data-i18n="DealBot organise les informations utiles pour rendre la recherche et la comparaison d'offres plus simples.">
             DealBot organise les informations utiles
             pour rendre la recherche et la comparaison
             d'offres plus simples.
@@ -3134,8 +3137,8 @@
 
           <article class="how-step">
             <span class="how-number">01</span>
-            <h3>Collecte</h3>
-            <p>
+            <h3 data-i18n="Collecte">Collecte</h3>
+            <p data-i18n="Les offres disponibles sont intégrées dans le catalogue DealBot.">
               Les offres disponibles sont intégrées
               dans le catalogue DealBot.
             </p>
@@ -3143,8 +3146,8 @@
 
           <article class="how-step">
             <span class="how-number">02</span>
-            <h3>Analyse</h3>
-            <p>
+            <h3 data-i18n="Analyse">Analyse</h3>
+            <p data-i18n="DealBot structure les données de prix, réduction et historique disponibles.">
               DealBot structure les données de prix,
               réduction et historique disponibles.
             </p>
@@ -3152,8 +3155,8 @@
 
           <article class="how-step">
             <span class="how-number">03</span>
-            <h3>Comparaison</h3>
-            <p>
+            <h3 data-i18n="Comparaison">Comparaison</h3>
+            <p data-i18n="Vous pouvez comparer plusieurs offres selon les critères disponibles.">
               Vous pouvez comparer plusieurs offres
               selon les critères disponibles.
             </p>
@@ -3161,8 +3164,8 @@
 
           <article class="how-step">
             <span class="how-number">04</span>
-            <h3>Redirection</h3>
-            <p>
+            <h3 data-i18n="Redirection">Redirection</h3>
+            <p data-i18n="L'achat final est effectué directement auprès du vendeur concerné.">
               L'achat final est effectué directement
               auprès du vendeur concerné.
             </p>
@@ -3187,24 +3190,24 @@
 
         <div class="page-header">
           <span class="eyebrow">DealBot</span>
-          <h1>À propos</h1>
+          <h1 data-i18n="À propos">À propos</h1>
         </div>
 
         <div class="content-card">
 
-          <p>
+          <p data-i18n="DealBot est une plateforme de découverte, comparaison et suivi d'offres en ligne.">
             DealBot est une plateforme de découverte,
             comparaison et suivi d'offres en ligne.
           </p>
 
-          <p>
+          <p data-i18n="Notre objectif est de présenter les informations essentielles de manière claire afin d'aider les utilisateurs à mieux évaluer les offres disponibles avant de visiter le site du vendeur.">
             Notre objectif est de présenter les informations
             essentielles de manière claire afin d'aider
             les utilisateurs à mieux évaluer les offres
             disponibles avant de visiter le site du vendeur.
           </p>
 
-          <p>
+          <p data-i18n="DealBot n'est pas le vendeur des produits référencés. Les transactions sont réalisées directement sur les plateformes partenaires ou marchandes concernées.">
             DealBot n'est pas le vendeur des produits
             référencés. Les transactions sont réalisées
             directement sur les plateformes partenaires
@@ -3232,7 +3235,7 @@
           <span class="eyebrow">Support</span>
           <h1>Contact</h1>
 
-          <p>
+          <p data-i18n="Une question, un problème ou une demande concernant DealBot ?">
             Une question, un problème ou
             une demande concernant DealBot ?
           </p>
@@ -3244,7 +3247,7 @@
           <form id="contactForm">
 
             <div class="filter-group">
-              <label for="contactName">
+              <label for="contactName" data-i18n="Nom">
                 Nom
               </label>
 
@@ -3292,7 +3295,7 @@
             <button
               type="submit"
               class="btn"
-            >
+             data-i18n="Envoyer">
               Envoyer
             </button>
 
@@ -3316,23 +3319,23 @@
       <div class="container">
 
         <div class="page-header">
-          <span class="eyebrow">Informations</span>
-          <h1>Politique de confidentialité</h1>
+          <span class="eyebrow" data-i18n="Informations">Informations</span>
+          <h1 data-i18n="Politique de confidentialité">Politique de confidentialité</h1>
         </div>
 
         <div class="content-card">
 
-          <p>
+          <p data-i18n="DealBot limite la collecte de données aux informations nécessaires au fonctionnement des services proposés.">
             DealBot limite la collecte de données
             aux informations nécessaires au fonctionnement
             des services proposés.
           </p>
 
-          <p>
+          <p data-i18n="Vos favoris, comparaisons, alertes et messages sont enregistrés dans votre compte. La session de connexion et la langue sont conservées sur votre appareil.">
             Vos favoris, comparaisons, alertes et messages sont enregistrés dans votre compte. La session de connexion et la langue sont conservées sur votre appareil.
           </p>
 
-          <p>
+          <p data-i18n="Lors d’une redirection marchand, DealBot enregistre l’offre, la page de départ, la date et un identifiant de session. Les alertes sont consultables dans le compte ; aucun email d’alerte n’est envoyé actuellement. Utilisez le formulaire de contact pour demander l’accès ou la suppression de vos données.">
             Lors d’une redirection marchand, DealBot enregistre l’offre, la page de départ, la date et un identifiant de session. Les alertes sont consultables dans le compte ; aucun email d’alerte n’est envoyé actuellement. Utilisez le formulaire de contact pour demander l’accès ou la suppression de vos données.
           </p>
 
@@ -3354,25 +3357,25 @@
       <div class="container">
 
         <div class="page-header">
-          <span class="eyebrow">Informations</span>
-          <h1>Conditions d'utilisation</h1>
+          <span class="eyebrow" data-i18n="Informations">Informations</span>
+          <h1 data-i18n="Conditions d'utilisation">Conditions d'utilisation</h1>
         </div>
 
         <div class="content-card">
 
-          <p>
+          <p data-i18n="DealBot fournit des informations de comparaison et de suivi à titre informatif.">
             DealBot fournit des informations de comparaison
             et de suivi à titre informatif.
           </p>
 
-          <p>
+          <p data-i18n="Les prix, disponibilités, réductions et conditions commerciales peuvent évoluer. Les informations affichées sur le site du vendeur au moment de l'achat restent la référence.">
             Les prix, disponibilités, réductions
             et conditions commerciales peuvent évoluer.
             Les informations affichées sur le site du vendeur
             au moment de l'achat restent la référence.
           </p>
 
-          <p>
+          <p data-i18n="DealBot peut percevoir une commission lorsque certaines redirections vers des partenaires aboutissent à une transaction, sans nécessairement modifier le prix payé par l'utilisateur.">
             DealBot peut percevoir une commission lorsque
             certaines redirections vers des partenaires
             aboutissent à une transaction, sans nécessairement
@@ -3395,7 +3398,7 @@
   <div class="container">
 
     <div class="page-header">
-      <span class="eyebrow">
+      <span class="eyebrow" data-i18n="DealBot interne">
         DealBot interne
       </span>
 
@@ -3403,12 +3406,12 @@
         Administration
       </h1>
 
-      <p>
+      <p data-i18n="Gestion des offres, des messages et des publicités.">
         Gestion des offres, des messages et des publicités.
       </p>
     </div>
 
-    <div class="admin-warning">
+    <div class="admin-warning" data-i18n="Accès réservé aux administrateurs. Les offres archivées conservent leur historique.">
       Accès réservé aux administrateurs. Les offres archivées conservent leur historique.
     </div>
 
@@ -3416,22 +3419,22 @@
     <div class="admin-grid">
 
       <div class="admin-stat">
-        <span>Offres</span>
+        <span data-i18n="Offres">Offres</span>
         <strong id="adminStatDeals">0</strong>
       </div>
 
       <div class="admin-stat">
-        <span>Catégories</span>
+        <span data-i18n="Catégories">Catégories</span>
         <strong id="adminStatCategories">0</strong>
       </div>
 
       <div class="admin-stat">
-        <span>Mes favoris</span>
+        <span data-i18n="Mes favoris">Mes favoris</span>
         <strong id="adminStatFavorites">0</strong>
       </div>
 
       <div class="admin-stat">
-        <span>Mes alertes</span>
+        <span data-i18n="Mes alertes">Mes alertes</span>
         <strong id="adminStatAlerts">0</strong>
       </div>
 
@@ -3442,11 +3445,11 @@
       <div class="admin-toolbar">
 
         <div>
-          <h2>
+          <h2 data-i18n="Catalogue">
             Catalogue
           </h2>
 
-          <p style="color:var(--ink-soft);font-size:.82rem;margin-top:4px;">
+          <p style="color:var(--ink-soft);font-size:.82rem;margin-top:4px;" data-i18n="Ajouter, modifier ou masquer les offres de test.">
             Ajouter, modifier ou masquer les offres de test.
           </p>
         </div>
@@ -3455,7 +3458,7 @@
           type="button"
           class="btn"
           id="adminAddDeal"
-        >
+         data-i18n="Ajouter une offre">
           Ajouter une offre
         </button>
 
@@ -3467,13 +3470,13 @@
 
           <thead>
             <tr>
-              <th>Produit</th>
-              <th>Catégorie</th>
-              <th>Vendeur</th>
-              <th>Prix</th>
-              <th>Réduction</th>
+              <th data-i18n="Produit">Produit</th>
+              <th data-i18n="Catégorie">Catégorie</th>
+              <th data-i18n="Vendeur">Vendeur</th>
+              <th data-i18n="Prix">Prix</th>
+              <th data-i18n="Réduction">Réduction</th>
               <th>Score</th>
-              <th>Statut</th>
+              <th data-i18n="Statut">Statut</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -3508,7 +3511,7 @@
             DealBot
           </div>
 
-          <p class="footer-desc">
+          <p class="footer-desc" data-i18n="Découvrez, comparez et suivez les offres avant d'acheter.">
             Découvrez, comparez et suivez
             les offres avant d'acheter.
           </p>
@@ -3518,17 +3521,17 @@
 
         <div class="footer-col">
 
-          <h3>Explorer</h3>
+          <h3 data-i18n="Explorer">Explorer</h3>
 
-          <a href="#explore" data-page="explore">
+          <a href="#explore" data-page="explore" data-i18n="Explorer les offres">
             Explorer les offres
           </a>
 
-          <a href="#categories" data-page="categories">
+          <a href="#categories" data-page="categories" data-i18n="Catégories">
             Catégories
           </a>
 
-          <a href="#compare" data-page="compare">
+          <a href="#compare" data-page="compare" data-i18n="Comparer">
             Comparer
           </a>
 
@@ -3541,17 +3544,17 @@
 
         <div class="footer-col">
 
-          <h3>Compte</h3>
+          <h3 data-i18n="Compte">Compte</h3>
 
-          <a href="#favorites" data-page="favorites">
+          <a href="#favorites" data-page="favorites" data-i18n="Favoris">
             Favoris
           </a>
 
-          <a href="#alerts" data-page="alerts">
+          <a href="#alerts" data-page="alerts" data-i18n="Alertes de prix">
             Alertes de prix
           </a>
 
-          <a href="#profile" data-page="profile">
+          <a href="#profile" data-page="profile" data-i18n="Mon profil">
             Mon profil
           </a>
 
@@ -3560,13 +3563,13 @@
 
         <div class="footer-col">
 
-          <h3>Informations</h3>
+          <h3 data-i18n="Informations">Informations</h3>
 
-          <a href="#about" data-page="about">
+          <a href="#about" data-page="about" data-i18n="À propos">
             À propos
           </a>
 
-          <a href="#how" data-page="how">
+          <a href="#how" data-page="how" data-i18n="Comment ça marche">
             Comment ça marche
           </a>
 
@@ -3574,11 +3577,11 @@
             Contact
           </a>
 
-          <a href="#privacy" data-page="privacy">
+          <a href="#privacy" data-page="privacy" data-i18n="Confidentialité">
             Confidentialité
           </a>
 
-          <a href="#terms" data-page="terms">
+          <a href="#terms" data-page="terms" data-i18n="Conditions">
             Conditions
           </a>
 
@@ -3588,9 +3591,9 @@
 
 
       <div class="footer-bottom">
-        © <span id="footerYear">2026</span> DealBot.
+        © <span id="footerYear">2026</span><span data-i18n="DealBot. Tous droits réservés."> DealBot.
         Tous droits réservés.
-      </div>
+      </span></div>
 
     </div>
 
@@ -3616,21 +3619,21 @@
         class="modal-close"
         data-close-modal
         aria-label="Fermer"
-      >
+       data-i18n-aria-label="Fermer">
         ×
       </button>
 
-      <h2 id="loginTitle">
+      <h2 id="loginTitle" data-i18n="Connexion">
         Connexion
       </h2>
 
 
       <form id="loginForm">
 
-        <label>
+        <label><span data-i18n="Adresse email">
           Adresse email
 
-          <input
+          </span><input
             type="email"
             id="loginEmail"
             autocomplete="email"
@@ -3639,10 +3642,10 @@
         </label>
 
 
-        <label>
+        <label><span data-i18n="Mot de passe">
           Mot de passe
 
-          <input
+          </span><input
             type="password"
             id="loginPassword"
             autocomplete="current-password"
@@ -3654,21 +3657,21 @@
         <button
           type="submit"
           class="btn block"
-        >
+         data-i18n="Se connecter">
           Se connecter
         </button>
 
       </form>
 
 
-      <button type="button" class="btn ghost small" id="forgotPassword">Mot de passe oublié ?</button>
-      <p class="modal-switch">
+      <button type="button" class="btn ghost small" id="forgotPassword" data-i18n="Mot de passe oublié ?">Mot de passe oublié ?</button>
+      <p class="modal-switch"><span data-i18n="Pas encore de compte ?">
         Pas encore de compte ?
 
-        <button
+        </span><button
           type="button"
           id="switchToSignup"
-        >
+         data-i18n="Créer un compte">
           Créer un compte
         </button>
       </p>
@@ -3696,21 +3699,21 @@
         class="modal-close"
         data-close-modal
         aria-label="Fermer"
-      >
+       data-i18n-aria-label="Fermer">
         ×
       </button>
 
-      <h2 id="signupTitle">
+      <h2 id="signupTitle" data-i18n="Créer un compte">
         Créer un compte
       </h2>
 
 
       <form id="signupForm">
 
-        <label>
+        <label><span data-i18n="Nom">
           Nom
 
-          <input
+          </span><input
             type="text"
             id="signupName"
             autocomplete="name"
@@ -3719,10 +3722,10 @@
         </label>
 
 
-        <label>
+        <label><span data-i18n="Adresse email">
           Adresse email
 
-          <input
+          </span><input
             type="email"
             id="signupEmail"
             autocomplete="email"
@@ -3731,10 +3734,10 @@
         </label>
 
 
-        <label>
+        <label><span data-i18n="Mot de passe">
           Mot de passe
 
-          <input
+          </span><input
             type="password"
             id="signupPassword"
             minlength="12"
@@ -3747,26 +3750,26 @@
         <button
           type="submit"
           class="btn block"
-        >
+         data-i18n="Créer mon compte">
           Créer mon compte
         </button>
 
       </form>
 
 
-      <p class="modal-note">
+      <p class="modal-note" data-i18n="La gestion sécurisée des comptes sera reliée au système d'authentification du backend.">
         La gestion sécurisée des comptes sera reliée
         au système d'authentification du backend.
       </p>
 
 
-      <p class="modal-switch">
+      <p class="modal-switch"><span data-i18n="Vous avez déjà un compte ?">
         Vous avez déjà un compte ?
 
-        <button
+        </span><button
           type="button"
           id="switchToLogin"
-        >
+         data-i18n="Se connecter">
           Se connecter
         </button>
       </p>
@@ -3793,11 +3796,11 @@
       class="modal-close"
       id="closeAdminDealModal"
       aria-label="Fermer"
-    >
+     data-i18n-aria-label="Fermer">
       ×
     </button>
 
-    <h2 id="adminDealTitle">
+    <h2 id="adminDealTitle" data-i18n="Offre DealBot">
       Offre DealBot
     </h2>
 
@@ -3810,39 +3813,39 @@
 
       <div class="admin-form-grid">
 
-        <label class="full">
+        <label class="full"><span data-i18n="Nom du produit">
           Nom du produit
 
-          <input
+          </span><input
             type="text"
             id="adminDealName"
             required
           >
         </label>
 
-        <label>
+        <label><span data-i18n="Catégorie">
           Catégorie
 
-          <select
+          </span><select
             id="adminDealCategory"
             required
           ></select>
         </label>
 
-        <label>
+        <label><span data-i18n="Vendeur">
           Vendeur
 
-          <input
+          </span><input
             type="text"
             id="adminDealStore"
             required
           >
         </label>
 
-        <label>
+        <label><span data-i18n="Prix actuel">
           Prix actuel
 
-          <input
+          </span><input
             type="number"
             id="adminDealPrice"
             min="0"
@@ -3851,10 +3854,10 @@
           >
         </label>
 
-        <label>
+        <label><span data-i18n="Prix de référence">
           Prix de référence
 
-          <input
+          </span><input
             type="number"
             id="adminDealOldPrice"
             min="0"
@@ -3875,43 +3878,43 @@
           >
         </label>
 
-        <label>
+        <label><span data-i18n="Disponibilité">
           Disponibilité
 
-          <select
+          </span><select
             id="adminDealAvailability"
           >
-            <option value="unknown">Stock non confirmé</option><option value="available">
+            <option value="unknown" data-i18n="Stock non confirmé">Stock non confirmé</option><option value="available" data-i18n="Disponible">
               Disponible
             </option>
 
-            <option value="limited">
+            <option value="limited" data-i18n="Stock limité">
               Stock limité
             </option>
 
-            <option value="outofstock">
+            <option value="outofstock" data-i18n="Épuisé">
               Épuisé
             </option>
           </select>
         </label>
 
-        <label class="full">
+        <label class="full"><span data-i18n="Lien de la fiche chez le vendeur">
           Lien de la fiche chez le vendeur
 
-          <input
+          </span><input
             type="url"
             id="adminDealUrl"
             placeholder="https://..."
-          >
+           data-i18n-placeholder="https://...">
         </label>
 
-        <label>État <select id="adminDealStatus"><option value="draft">Brouillon</option><option value="active">Publié</option><option value="paused">En pause</option><option value="expired">Expiré</option><option value="archived">Archivé</option></select></label>
-        <label>Devise <select id="adminDealCurrency"><option>MUR</option><option>EUR</option><option>USD</option><option>GBP</option></select></label>
-        <label class="full">Lien affilié HTTPS (facultatif) <input id="adminDealAffiliate" type="url" placeholder="https://..."></label>
-        <label class="full">Image HTTPS <input id="adminDealImage" type="url"></label>
-        <label>Début de publication (UTC) <input id="adminDealStart" type="datetime-local"></label>
-        <label><input id="adminDealFeatured" type="checkbox" style="width:auto;min-height:0;align-self:flex-start;"> Mettre en avant sur l’accueil</label>
-        <label>Expiration (UTC) <input id="adminDealExpiry" type="datetime-local"></label>
+        <label><span data-i18n="État">État </span><select id="adminDealStatus"><option value="draft" data-i18n="Brouillon">Brouillon</option><option value="active" data-i18n="Publié">Publié</option><option value="paused" data-i18n="En pause">En pause</option><option value="expired" data-i18n="Expiré">Expiré</option><option value="archived" data-i18n="Archivé">Archivé</option></select></label>
+        <label><span data-i18n="Devise">Devise </span><select id="adminDealCurrency"><option>MUR</option><option>EUR</option><option>USD</option><option>GBP</option></select></label>
+        <label class="full"><span data-i18n="Lien affilié HTTPS (facultatif)">Lien affilié HTTPS (facultatif) </span><input id="adminDealAffiliate" type="url" placeholder="https://..." data-i18n-placeholder="https://..."></label>
+        <label class="full"><span data-i18n="Image HTTPS">Image HTTPS </span><input id="adminDealImage" type="url"></label>
+        <label><span data-i18n="Début de publication (UTC)">Début de publication (UTC) </span><input id="adminDealStart" type="datetime-local"></label>
+        <label><input id="adminDealFeatured" type="checkbox" style="width:auto;min-height:0;align-self:flex-start;"><span data-i18n="Mettre en avant sur l’accueil"> Mettre en avant sur l’accueil</span></label>
+        <label><span data-i18n="Expiration (UTC)">Expiration (UTC) </span><input id="adminDealExpiry" type="datetime-local"></label>
         <label class="full">
           Description
 
@@ -3937,14 +3940,14 @@
           type="button"
           class="btn ghost"
           id="cancelAdminDeal"
-        >
+         data-i18n="Annuler">
           Annuler
         </button>
 
         <button
           type="submit"
           class="btn"
-        >
+         data-i18n="Enregistrer">
           Enregistrer
         </button>
 
@@ -3955,8 +3958,8 @@
   </div>
 </div>
   <div class="modal-overlay" id="recoveryModal" role="dialog" aria-modal="true" aria-labelledby="recoveryTitle">
-    <div class="modal-box"><button type="button" class="modal-close" data-close-modal aria-label="Fermer">×</button>
-    <h2 id="recoveryTitle">Nouveau mot de passe</h2><form id="recoveryForm"><label>Mot de passe (12 caractères minimum)<input id="recoveryPassword" type="password" minlength="12" autocomplete="new-password" required></label><button type="submit" class="btn">Enregistrer</button></form></div>
+    <div class="modal-box"><button type="button" class="modal-close" data-close-modal aria-label="Fermer" data-i18n-aria-label="Fermer">×</button>
+    <h2 id="recoveryTitle" data-i18n="Nouveau mot de passe">Nouveau mot de passe</h2><form id="recoveryForm"><label><span data-i18n="Mot de passe (12 caractères minimum)">Mot de passe (12 caractères minimum)</span><input id="recoveryPassword" type="password" minlength="12" autocomplete="new-password" required></label><button type="submit" class="btn" data-i18n="Enregistrer">Enregistrer</button></form></div>
   </div>
   <!-- =========================
        TOAST
@@ -3969,6 +3972,7 @@
     aria-live="polite"
   ></div>
   <script src="backend.js"></script>
+  <script src="i18n.js"></script>
   <script src="app.js"></script>
 
 </body>
