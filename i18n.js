@@ -1,6 +1,15 @@
 (function(root){
 "use strict";
 const messages={
+  "Source": {"fr": "Source", "en": "Source"},
+  "Saisie manuelle": {"fr": "Saisie manuelle", "en": "Manual entry"},
+  "Identifiant source": {"fr": "Identifiant source", "en": "Source identifier"},
+  "Révision": {"fr": "Révision", "en": "Revision"},
+  "Lien affilié": {"fr": "Lien affilié", "en": "Affiliate link"},
+  "Non renseigné": {"fr": "Non renseigné", "en": "Not provided"},
+  "Calcul automatique v1": {"fr": "Calcul automatique v1", "en": "Automatic calculation v1"},
+  "Score éditorial": {"fr": "Score éditorial", "en": "Editorial score"},
+
   "DealBot — Comparateur et suivi de bonnes affaires": {
     "fr": "DealBot — Comparateur et suivi de bonnes affaires",
     "en": "DealBot — Deal comparison and price tracking"

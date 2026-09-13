@@ -9,13 +9,13 @@ const delay = () => new Promise(r=>setTimeout(r,25));
 const raw = {id:11,name:'Phone <script>bad()</script>',price:12000,old_price:15000,currency:'MUR',merchant_id:1,category_id:1,status:'active',availability:'in_stock',original_url:'https://example.com/product',dealbot_score:75};
 const categories = [{id:1,slug:'technology',name_fr:'Technologie',name_en:'Technology',is_active:true,sort_order:0}];
 const deal = backend.normalizeDeal(raw,[{id:1,name:'Shop'}],categories);
-async function setup({storedLang=null,user=null,role='user',empty=false,fail=false,hash='',saveFail=false,loginError=false,personalFail=false,personal={favorites:[],compare:[],alerts:[]}}={}) {
+async function setup({catalogDeals=null,storedLang=null,user=null,role='user',empty=false,fail=false,hash='',saveFail=false,loginError=false,personalFail=false,personal={favorites:[],compare:[],alerts:[]}}={}) {
   const errors=[]; const vc=new VirtualConsole(); vc.on('jsdomError',e=>errors.push(e));
   const dom=new JSDOM(html,{url:'https://test.example/'+hash,runScripts:'outside-only',virtualConsole:vc});
   const w=dom.window; w.scrollTo=()=>{}; w.confirm=()=>true;
   let authListener, client; const calls=[];
   const session=user ? {user:{id:user,email:'test@example.com'}} : null;
-  const api={catalog:async()=>{if(fail) throw Error('offline'); return {deals:empty?[]:[deal,{...deal,id:12,name:'Other phone'}],categories,merchants:[]};},
+  const api={catalog:async()=>{if(fail) throw Error('offline'); return {deals:catalogDeals || (empty?[]:[deal,{...deal,id:12,name:'Other phone'}]),categories,merchants:[]};},
     personal:async()=>{if(personalFail) throw Error('offline');return structuredClone(personal);},savePersonal:async data=>{calls.push(['save',data]); if(saveFail) throw Error('offline');},
     history:async()=>[{price:12000,currency:'MUR',recorded_at:'2026-09-08'}],saveDeal:async data=>{calls.push(['admin',data]); return 11;},
     archiveDeal:async id=>calls.push(['archive',id]),track:async()=> 'https://example.com/product'};
@@ -359,4 +359,15 @@ test('translation catalog covers every literal translation key in app code',asyn
   Object.values(n).forEach(v=>Array.isArray(v)?v.forEach(walk):walk(v));
  }
  walk(tree);dom.window.close();
+});
+
+test('admin import provenance is escaped and affiliate query is not shown in overview',async()=>{
+ const imported={...deal,syncSource:'source<unsafe>',syncExternalId:'offer<unsafe>',syncRevision:7,status:'expired',scoreMethod:'automatic-v1',affiliateOverride:'https://example.com/path?private_parameter=hidden'};
+ const {dom,w}=await setup({user:'admin-user',role:'admin',catalogDeals:[imported]});
+ w.location.hash='admin'; await delay(); await delay();
+ const table=w.document.getElementById('adminDealsBody');
+ assert.match(table.textContent,/source<unsafe>/);assert.match(table.textContent,/offer<unsafe>/);
+ assert.match(table.textContent,/Expiré/);assert.match(table.textContent,/Calcul automatique v1/);
+ assert.match(table.textContent,/example.com/);assert.doesNotMatch(table.textContent,/private_parameter|hidden/);
+ assert.equal(table.querySelector('unsafe'),null);dom.window.close();
 });

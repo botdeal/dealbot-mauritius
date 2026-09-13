@@ -3354,6 +3354,9 @@ async function renderAdmin() {
         <strong>
           ${escapeHTML(deal.name)}
         </strong>
+        <div>${t("Source")} : ${escapeHTML(deal.syncSource || t("Saisie manuelle"))}</div>
+        ${deal.syncSource ? `<div>${t("Identifiant source")} : ${escapeHTML(deal.syncExternalId)} · ${t("Révision")} : ${escapeHTML(deal.syncRevision ?? '—')}</div>` : ''}
+        <div>${t("Lien affilié")} : ${deal.affiliateOverride ? escapeHTML(new URL(deal.affiliateOverride).hostname) : t("Non renseigné")}</div>
       </td>
 
       <td>
@@ -3376,9 +3379,11 @@ async function renderAdmin() {
 
       <td>
         ${deal.score}/100
+        <div>${deal.scoreMethod === 'automatic-v1' ? t("Calcul automatique v1") : t("Score éditorial")}</div>
       </td>
 
       <td>
+        <div>${escapeHTML(t(({draft:'Brouillon',active:'Publié',paused:'En pause',expired:'Expiré',archived:'Archivé'})[deal.status] || 'Non renseigné'))}</div>
         <span class="admin-badge">
           ${escapeHTML(
             availabilityText(
