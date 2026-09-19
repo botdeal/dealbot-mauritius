@@ -2,7 +2,7 @@
 
 Account-observed source: Admitad DealBot ad space 2993975, AliExpress WW 6115,
 Hot Products feed 50003. The URL in `scripts/admitad/collect.py` was generated
-through the official Product Feeds UI on 2026-09-19 (USD 10–25, YML).
+through the official Product Feeds UI on 2026-09-19 (USD 75–100, discounted products only, YML).
 The endpoint responds with streamed XML without account cookies or an API secret.
 Do not generalize these parameters to another account or feed.
 
@@ -26,7 +26,7 @@ is preserved. GitHub never receives a Supabase service key. The service-only
 
 ## Catalogue scope and truthfulness
 
-The feed is read through XML EOF before **any** manifest is uploaded. XML errors,
+The feed is read through a verified final XML envelope before **any** manifest is uploaded. Envelope errors,
 truncation, resource caps, conflicting duplicate products, empty selection,
 abnormal validation failures and greater-than-50% catalogue shrink preserve the
 previous catalogue. A failed upload cannot reconcile until every chunk seals.
@@ -84,3 +84,13 @@ References:
 - https://docs.github.com/en/actions/reference/security/oidc
 - https://docs.github.com/en/actions/reference/runners/github-hosted-runners
 - https://supabase.com/docs/guides/functions/limits
+
+## Upstream malformed-record handling
+
+The 10–25 USD feed failed strict whole-document parsing at line 2284286; the
+discount-only variant failed at line 1580077. The collector now parses each
+bounded offer independently, excludes malformed records without repairing URLs
+or prices, counts rejections, and still requires the complete valid closing
+envelope. Excessive invalid records abort the entire import. The selected
+75–100 USD official partition reduces upstream volume. No undocumented cursor,
+category parameter or range request is used.

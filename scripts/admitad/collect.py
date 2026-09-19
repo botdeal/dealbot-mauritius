@@ -1,7 +1,7 @@
 """Official Admitad YML collector. Streams to EOF; never reconciles a partial feed.
 
 The URL below was generated in Admitad for DealBot (2993975), Hot Products
-(50003), USD 10–25, YML on 2026-09-19. It contains no credential.
+(50003), USD 75–100, discounted products, YML on 2026-09-19. It contains no credential.
 Only the bounded curated selection, not the entire upstream feed, is published.
 """
 import argparse
@@ -20,7 +20,7 @@ import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 
-FEED = 'https://feed.admitad.com/api/external/feed_export/50003?min_price=10&max_price=25&website_id=2993975&currency=USD&format=yml'
+FEED = 'https://feed.admitad.com/api/external/feed_export/50003?min_price=75&max_price=100&website_id=2993975&currency=USD&products_discount_only=true&format=yml'
 ENDPOINT = 'https://rrcxlohsbxfldflqfgqx.supabase.co/functions/v1/dealbot-sync'
 SOURCE = 'admitad-aliexpress-hot-usd'
 AUDIENCE = 'dealbot-admitad-collector'
@@ -67,7 +67,7 @@ def normalize(element, categories):
     from decimal import Decimal, InvalidOperation
     try: price = Decimal(fields.get('price', ''))
     except InvalidOperation: raise ValueError('invalid_price')
-    if not price.is_finite() or not 10 <= price <= 25 or price != price.quantize(Decimal('.01')):
+    if not price.is_finite() or not 75 <= price <= 100 or price != price.quantize(Decimal('.01')):
         raise ValueError('invalid_price')
     if fields.get('currencyId') != 'USD': raise ValueError('unexpected_currency')
     image = https_url(fields.get('picture', ''))
@@ -105,26 +105,67 @@ class BoundedReader:
         self.tail = scan[-16:]
         return data
 
+def yml_records(reader):
+    """Isolate malformed upstream offers, but require a valid envelope and footer.
+
+    Admitad's observed YML contains a malformed offer at line 2284286 in the
+    USD 10–25 partition. Never repair affiliate URLs or publish a partial feed.
+    Each bounded offer is independently parsed strictly; malformed ones are
+    quarantined by count while a missing/truncated envelope remains fatal.
+    """
+    buffer = b''
+    while b'<offers>' not in buffer:
+        part = reader.read(65536)
+        if not part: raise ET.ParseError('missing offers envelope')
+        buffer += part
+        if len(buffer) > 2 * 1024**2: raise ValueError('feed_header_limit')
+    header, buffer = buffer.split(b'<offers>', 1)
+    root = ET.fromstring(header + b'</shop></yml_catalog>')
+    if root.tag != 'yml_catalog' or root.find('shop') is None: raise ValueError('unexpected_feed_format')
+    for category in root.findall('./shop/categories/category'):
+        yield 'category', category
+    while True:
+        buffer = buffer.lstrip()
+        if buffer.startswith(b'</offers>'):
+            while True:
+                part = reader.read(65536)
+                if not part: break
+                buffer += part
+                if len(buffer) > 4096: raise ET.ParseError('unexpected data after offers')
+            if not re.fullmatch(rb'</offers>\s*</shop>\s*</yml_catalog>\s*', buffer):
+                raise ET.ParseError('invalid final envelope')
+            return
+        end = buffer.find(b'</offer>')
+        if end >= 0:
+            if not re.match(rb'<offer(?:\s|>)', buffer): raise ET.ParseError('invalid offer boundary')
+            raw, buffer = buffer[:end+8], buffer[end+8:]
+            if len(raw) > 512 * 1024: raise ValueError('offer_size_limit')
+            try: element = ET.fromstring(raw)
+            except ET.ParseError: element = None
+            yield 'offer', element
+            continue
+        if len(buffer) > 512 * 1024: raise ValueError('offer_size_limit')
+        part = reader.read(65536)
+        if not part: raise ET.ParseError('truncated offers envelope')
+        buffer += part
+
 def collect(stream, per_category=100):
     if not 1 <= per_category <= 100: raise ValueError('selection_limit')
     reader = BoundedReader(stream); categories = {}; selected = {}; heaps = collections.defaultdict(list)
-    counts = collections.Counter(); root = None; stack = []
+    counts = collections.Counter()
     # Disk-backed fingerprints avoid keeping a giant catalogue in memory.
     with tempfile.TemporaryDirectory() as directory:
         db = sqlite3.connect(os.path.join(directory, 'seen.sqlite'))
         db.execute('create table seen(id text primary key, digest text not null)')
-        for event, element in ET.iterparse(reader, events=('start', 'end')):
-            if event == 'start':
-                stack.append(element)
-                if root is None:
-                    root = element
-                    if element.tag != 'yml_catalog': raise ValueError('unexpected_feed_format')
-                continue
-            if element.tag == 'category':
+        for event, element in yml_records(reader):
+            if event == 'category':
                 categories[element.get('id')] = (element.text, element.get('parentId'))
-            elif element.tag == 'offer':
+            elif event == 'offer':
                 counts['scanned'] += 1
                 if counts['scanned'] > 1000000: raise ValueError('feed_offer_limit_no_import')
+                if element is None:
+                    counts['invalid'] += 1; counts['invalid_xml_offer'] += 1
+                    continue
                 try:
                     offer = normalize(element, categories)
                 except ValueError as error:
@@ -148,11 +189,9 @@ def collect(stream, per_category=100):
                             removed = heapq.heapreplace(heap, (-rank, pid))[1]
                             del selected[removed]; selected[pid] = offer
                 else: counts['excluded'] += 1
-                if len(stack) > 1: stack[-2].remove(element)
                 element.clear()
                 if counts['scanned'] % 50000 == 0:
                     print(json.dumps({'scanned': counts['scanned'], 'selected': len(selected), 'bytes': reader.bytes}), flush=True)
-            stack.pop()
         db.close()
     # Reaching this point proves XML EOF, not just a successful HTTP header.
     if counts['scanned'] == 0 or not selected: raise ValueError('empty_feed_no_reconciliation')
@@ -216,5 +255,5 @@ if __name__ == '__main__':
     try: main()
     except Exception as error:
         # Never print HTTP headers, tokens, response bodies, or full feed records.
-        print('COLLECTOR FAILED:', str(error) if isinstance(error, ValueError) else type(error).__name__)
+        print('COLLECTOR FAILED:', str(error) if isinstance(error, (ValueError, ET.ParseError)) else type(error).__name__)
         raise SystemExit(1)

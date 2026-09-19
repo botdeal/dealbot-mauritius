@@ -1,4 +1,5 @@
 import io
+from pathlib import Path
 import unittest
 import xml.etree.ElementTree as ET
 from collect import BoundedReader, https_url, normalize, original_url, collect
@@ -27,13 +28,37 @@ class CollectorTests(unittest.TestCase):
     def test_truncated_feed_cannot_reconcile(self):
         with self.assertRaises(ET.ParseError): collect(io.BytesIO(b'<yml_catalog><shop><offers>'))
     def test_empty_feed_cannot_reconcile(self):
-        with self.assertRaises(ValueError): collect(io.BytesIO(b'<yml_catalog><shop/></yml_catalog>'))
+        with self.assertRaises(ValueError): collect(io.BytesIO(b'<yml_catalog><shop><offers></offers></shop></yml_catalog>'))
     def test_unexpected_format_rejected(self):
-        with self.assertRaises(ValueError): collect(io.BytesIO(b'<html/>'))
+        with self.assertRaises((ValueError, ET.ParseError)): collect(io.BytesIO(b'<html/>'))
     def test_selection_limit(self):
         with self.assertRaises(ValueError): collect(io.BytesIO(b''),101)
     def test_unselected_real_clothing_category_excluded(self):
         e=ET.fromstring('<offer id="1005006548242531"><categoryId>200000779</categoryId></offer>')
         self.assertIsNone(normalize(e,{'200000779':('T-Shirts','200000343'),'200000343':("Men’s Clothing",None)}))
+    def recorded(self):
+        return (Path(__file__).parent/'fixtures/official-one-offer.xml').read_bytes()
+    def test_recorded_real_offer_mapping(self):
+        offers, summary=collect(io.BytesIO(self.recorded()))
+        self.assertEqual(len(offers),1);self.assertEqual(summary['scanned'],1)
+        self.assertEqual(offers[0]['external_id'],'1005010299162177')
+        self.assertEqual(offers[0]['price'],82.25);self.assertEqual(offers[0]['old_price'],96.77)
+        self.assertEqual(offers[0]['availability'],'unknown');self.assertNotIn('description',offers[0])
+    def test_malformed_offer_isolated_without_repairing_data(self):
+        data=self.recorded();start=data.index(b'<offer ');end=data.index(b'</offer>')+8
+        broken=data[start:end].replace(b'<name>',b'<name>bad & raw ')
+        data=data[:end]+broken+data[end:]
+        offers,summary=collect(io.BytesIO(data))
+        self.assertEqual(len(offers),1);self.assertEqual(summary['invalid_xml_offer'],1)
+    def test_valid_products_with_missing_footer_cannot_import(self):
+        with self.assertRaises(ET.ParseError): collect(io.BytesIO(self.recorded().replace(b'</yml_catalog>',b'')))
+    def test_exact_duplicate_is_idempotent(self):
+        data=self.recorded();start=data.index(b'<offer ');end=data.index(b'</offer>')+8
+        offers,summary=collect(io.BytesIO(data[:end]+data[start:end]+data[end:]))
+        self.assertEqual(len(offers),1);self.assertEqual(summary['duplicates'],1)
+    def test_conflicting_duplicate_aborts_full_import(self):
+        data=self.recorded();start=data.index(b'<offer ');end=data.index(b'</offer>')+8
+        changed=data[start:end].replace(b'<price>82.25</price>',b'<price>83.25</price>')
+        with self.assertRaisesRegex(ValueError,'conflicting_duplicate'):collect(io.BytesIO(data[:end]+changed+data[end:]))
 
 if __name__=='__main__': unittest.main()
