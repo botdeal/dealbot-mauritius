@@ -1,0 +1,35 @@
+name: Admitad real catalogue
+on:
+  workflow_dispatch:
+    inputs:
+      per_category:
+        description: 'Products per allowed category (3 initial, maximum 100)'
+        type: choice
+        options: ['3', '20', '100']
+        default: '3'
+  push:
+    branches: [main]
+    paths: ['scripts/admitad/**', '.github/workflows/admitad-sync.yml', 'supabase/functions/dealbot-sync/github-auth.mjs']
+  schedule:
+    - cron: '37 4 * * *'
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: admitad-real-catalogue
+  cancel-in-progress: false
+jobs:
+  collect:
+    if: github.repository == 'botdeal/dealbot-mauritius' && github.ref == 'refs/heads/main' && github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Validate collector
+        run: python3 -m unittest discover -s scripts/admitad -p 'test_*.py'
+      - name: Collect complete official feed and import bounded selection
+        env:
+          SELECTION: ${{ inputs.per_category || '3' }}
+        run: python3 scripts/admitad/collect.py --per-category "$SELECTION" --publish
