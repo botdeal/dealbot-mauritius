@@ -3,10 +3,10 @@ on:
   workflow_dispatch:
     inputs:
       per_category:
-        description: 'Products per allowed category (3 initial, maximum 100)'
+        description: 'Products per allowed category (validated catalogue scope)'
         type: choice
-        options: ['3', '20', '100']
-        default: '3'
+        options: ['100']
+        default: '100'
   push:
     branches: [main]
     paths: ['scripts/admitad/**', '.github/workflows/admitad-sync.yml', 'supabase/functions/dealbot-sync/github-auth.mjs']
@@ -31,5 +31,5 @@ jobs:
         run: python3 -m unittest discover -s scripts/admitad -p 'test_*.py'
       - name: Collect complete official feed and import bounded selection
         env:
-          SELECTION: ${{ inputs.per_category || '3' }}
+          SELECTION: ${{ inputs.per_category || '100' }}
         run: python3 scripts/admitad/collect.py --per-category "$SELECTION" --publish

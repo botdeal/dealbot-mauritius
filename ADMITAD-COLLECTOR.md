@@ -33,11 +33,14 @@ previous catalogue. A failed upload cannot reconcile until every chunk seals.
 Exact request retries reuse the same manifest and page bodies. A new workflow
 attempt uses a new revision and rescans the feed. No HTTP Range/resume support
 has been assumed: failures restart a streaming scan, never skip unknown bytes.
+A transient network/truncation failure receives one automatic full-scan retry;
+repeated failures stop without uploading an incomplete snapshot.
 
 Ten explicitly allowed everyday-product categories, a deterministic per-category
 selection and a hard ceiling of 1,000 offers limit database/frontend costs.
-Initial runs select up to three products/category for validation. Scale to 20,
-then 100 after the live checks. The complete snapshot means this **curated scope**,
+The first live run imported 30 products and validated tracking. Runs now select
+up to 100 products/category. Medical/diagnostic products are excluded even when
+the upstream category incorrectly describes them as everyday home products. The complete snapshot means this **curated scope**,
 not the hundreds of thousands of upstream products. Changing the selection
 policy is an operational change; do not silently lower its limits after scaling.
 
@@ -55,7 +58,10 @@ invented. Automatic DealBot scoring remains the existing transparent calculation
 The existing multipart Autopilot validates, deduplicates, scores, writes price
 history and atomically reconciles absent selected products. Source registration
 starts with `auto_publish=false`; enable only after the real draft import is
-verified. The UI, authentication, RLS and other sources are unchanged.
+verified. This source was enabled after successful live validation of run 44
+(GitHub run 35469809900): 30 created, source revision 2001. One misclassified
+medical product was subsequently paused. Authentication, RLS and other sources
+are unchanged.
 
 The existing minute worker, hourly retention and daily Cron-log cleanup stay in
 place. An additional hourly task withdraws this source's active offers if they

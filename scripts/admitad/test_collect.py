@@ -2,7 +2,9 @@ import io
 from pathlib import Path
 import unittest
 import xml.etree.ElementTree as ET
-from collect import BoundedReader, https_url, normalize, original_url, collect
+from unittest.mock import patch
+import urllib.error
+from collect import BoundedReader, https_url, normalize, original_url, collect, load_offers
 
 # Recorded official feed record (2026-09-19), never submitted by these tests.
 PID = '1005006548242531'
@@ -60,5 +62,28 @@ class CollectorTests(unittest.TestCase):
         data=self.recorded();start=data.index(b'<offer ');end=data.index(b'</offer>')+8
         changed=data[start:end].replace(b'<price>82.25</price>',b'<price>83.25</price>')
         with self.assertRaisesRegex(ValueError,'conflicting_duplicate'):collect(io.BytesIO(data[:end]+changed+data[end:]))
+    def test_medical_product_in_everyday_category_is_excluded(self):
+        data=self.recorded()
+        start=data.index(b"<name>")+6;end=data.index(b"</name>",start)
+        data=data[:start]+b"High Accuracy Troponin I Test Kit"+data[end:]
+        with self.assertRaises(ValueError):collect(io.BytesIO(data))
+    def response(self):
+        from email.message import Message
+        stream=io.BytesIO(self.recorded());stream.status=200;stream.headers=Message();stream.headers['Content-Type']='application/xml'
+        return stream
+    def test_temporary_failure_restarts_and_completes(self):
+        with patch('collect.print'), patch('collect.urllib.request.urlopen') as unused:
+            calls=[]
+            def opener(*args,**kwargs):
+                calls.append(1)
+                if len(calls)==1:raise urllib.error.URLError('temporary')
+                return self.response()
+            offers,summary=load_offers(3,opener,lambda _:None)
+        self.assertEqual(len(calls),2);self.assertEqual(len(offers),1)
+    def test_repeated_failure_is_bounded(self):
+        calls=[]
+        def opener(*args,**kwargs):calls.append(1);raise TimeoutError()
+        with patch('collect.print'),self.assertRaises(TimeoutError):load_offers(3,opener,lambda _:None)
+        self.assertEqual(len(calls),2)
 
 if __name__=='__main__': unittest.main()

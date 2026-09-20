@@ -9,6 +9,7 @@ import collections
 import datetime as dt
 import hashlib
 import heapq
+import http.client
 import json
 import os
 import re
@@ -30,7 +31,7 @@ ROOTS = {'13': ('Bricolage', 'Home Improvement'), '39': ('Éclairage', 'Lights &
          '7': ('Informatique', 'Computer & Office'), '15': ('Maison et jardin', 'Home & Garden'),
          '18': ('Sports et loisirs', 'Sports & Entertainment'), '21': ('Fournitures de bureau', 'Office & School Supplies'),
          '1420': ('Outils', 'Tools'), '26': ('Jeux et jouets', 'Toys & Hobbies')}
-REJECT = re.compile(r'\b(replica|luxury brand|electronic cigarette|vape|tobacco|weapon|pistol|rifle|ammunition|sex toy)\b', re.I)
+REJECT = re.compile(r'\b(replica|luxury brand|electronic cigarette|vape|tobacco|weapon|pistol|rifle|ammunition|sex toy|medical|surgical|diagnostic|reagent|troponin|poct|prescription|pharmaceutical|laboratory|tattoo|nicotine)\b', re.I)
 
 def https_url(value, hosts=None):
     p = urllib.parse.urlsplit(value or '')
@@ -236,14 +237,29 @@ def publish(offers):
         time.sleep(5)
     raise ValueError('autopilot_run_pending_check_admin')
 
+def load_offers(per_category, opener=urllib.request.urlopen, pause=time.sleep):
+    # A broken stream has no safe byte cursor/ETag advertised by this source.
+    # Restart once from the official URL; never reconcile an unfinished scan.
+    for attempt in range(2):
+        try:
+            with opener(FEED, timeout=60) as stream:
+                if stream.status != 200 or stream.headers.get_content_type() not in ('application/xml', 'text/xml'):
+                    raise ValueError('unexpected_feed_response')
+                return collect(stream, per_category)
+        except urllib.error.HTTPError as error:
+            if error.code not in (429,500,502,503,504) or attempt: raise
+        except (TimeoutError, urllib.error.URLError, http.client.IncompleteRead, ConnectionError):
+            if attempt: raise
+        except ET.ParseError as error:
+            if 'truncated' not in str(error) or attempt: raise
+        print('Upstream interrupted; restarting complete scan (attempt 2/2)', flush=True)
+        pause(5)
+
 def main():
     parser = argparse.ArgumentParser(); parser.add_argument('--per-category', type=int, default=3)
     parser.add_argument('--publish', action='store_true'); parser.add_argument('--output')
     args = parser.parse_args()
-    with urllib.request.urlopen(FEED, timeout=60) as stream:
-        if stream.status != 200 or stream.headers.get_content_type() not in ('application/xml', 'text/xml'):
-            raise ValueError('unexpected_feed_response')
-        offers, summary = collect(stream, args.per_category)
+    offers, summary = load_offers(args.per_category)
     print(json.dumps({'feed': 'Admitad AliExpress WW Hot Products', **summary}), flush=True)
     if args.output:
         with open(args.output, 'w') as out: json.dump(offers, out, ensure_ascii=False)
