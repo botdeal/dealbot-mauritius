@@ -151,6 +151,10 @@
   let DEALS = [];
   let ADMIN_DEALS = [];
   let catalogRevision = 0;
+  let currencyChosen = false;
+  function catalogueCurrency() {
+    return DEALS.some(d => d.currency === 'MUR') ? 'MUR' : (DEALS[0]?.currency || 'MUR');
+  }
   let catalogState = 'loading';
   async function loadCatalogFromSupabase() {
     const revision = ++catalogRevision;
@@ -161,6 +165,7 @@
       if (revision !== catalogRevision) return;
       ADMIN_DEALS = currentProfile?.role === 'admin' ? result.deals : [];
       DEALS = result.deals.filter(d => d.published);
+      if (!currencyChosen) state.filters.currency = catalogueCurrency();
       CATEGORIES.splice(0,CATEGORIES.length,...result.categories.filter(c=>c.is_active).sort((a,b)=>a.sort_order-b.sort_order).map(c=>({id:c.slug,fr:c.name_fr,en:c.name_en})));
       catalogState = 'ready';
       populateFilters();
@@ -1349,8 +1354,9 @@ if (page === "admin") {
   }
 
   function resetFilters() {
+    currencyChosen = false;
     state.filters = {
-      currency: "MUR",
+      currency: catalogueCurrency(),
       search: "",
       category: "",
       minPrice: "",
@@ -3752,7 +3758,7 @@ adminDealForm.addEventListener('submit', async function(event) {
     try { await restoreSession(currentSession); } finally { button.disabled=false; }
   });
   document.getElementById('catalogStatus').querySelector('button').addEventListener('click',()=>{if(!personalReady) initializeSupabaseAuth();else loadCatalogFromSupabase();});
-  document.getElementById('currencyFilter').addEventListener('change',event=>{state.filters.currency=event.target.value;state.visibleDeals=DEALS_PER_PAGE;renderExplore();});
+  document.getElementById('currencyFilter').addEventListener('change',event=>{currencyChosen=true;state.filters.currency=event.target.value;state.visibleDeals=DEALS_PER_PAGE;renderExplore();});
   init();
   loadAds();
   initializeSupabaseAuth().catch(()=> { catalogState='error'; showCatalogStatus(); });

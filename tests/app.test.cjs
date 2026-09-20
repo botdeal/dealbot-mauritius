@@ -371,3 +371,15 @@ test('admin import provenance is escaped and affiliate query is not shown in ove
  assert.match(table.textContent,/example.com/);assert.doesNotMatch(table.textContent,/private_parameter|hidden/);
  assert.equal(table.querySelector('unsafe'),null);dom.window.close();
 });
+
+test('USD-only imported catalogue is searchable by default and after filter reset',async()=>{
+  const {dom,w}=await setup({catalogDeals:[{...deal,currency:'USD'}],hash:'#explore'});
+  assert.equal(w.document.getElementById('currencyFilter').value,'USD');
+  assert.equal(w.document.querySelectorAll('#exploreDeals .product-card').length,1);
+  const select=w.document.getElementById('currencyFilter');select.value='EUR';select.dispatchEvent(new w.Event('change'));
+  assert.equal(w.document.querySelectorAll('#exploreDeals .product-card').length,0);
+  w.document.getElementById('resetFilters').click();
+  assert.equal(select.value,'USD');
+  assert.equal(w.document.querySelectorAll('#exploreDeals .product-card').length,1);
+  dom.window.close();
+});
