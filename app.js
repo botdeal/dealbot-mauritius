@@ -2886,6 +2886,29 @@ if (page === "admin") {
     }
   );
 
+  function authErrorMessage(error) {
+    switch (error?.code) {
+      case 'email_not_confirmed': return t("Confirmez votre adresse email avant de vous connecter. Vérifiez aussi les courriers indésirables ou renvoyez le lien de confirmation.");
+      case 'invalid_credentials': return t("Adresse email ou mot de passe incorrect.");
+      case 'over_email_send_rate_limit':
+      case 'over_request_rate_limit': return t("Trop de tentatives. Patientez quelques minutes avant de réessayer.");
+      case 'email_address_not_authorized': return t("L’envoi des emails d’inscription est indisponible pour cette adresse. Contactez DealBot.");
+      case 'weak_password': return t("Choisissez un mot de passe plus fort, de 12 caractères minimum.");
+      case 'user_already_exists':
+      case 'email_exists': return t("Ce compte existe déjà. Connectez-vous ou utilisez Mot de passe oublié.");
+      case 'otp_expired':
+      case 'flow_state_expired': return t("Ce lien a expiré ou a déjà été utilisé. Demandez un nouveau lien.");
+      case 'session_expired':
+      case 'refresh_token_not_found': return t("Votre session a expiré. Connectez-vous à nouveau.");
+      default: return error?.status === 429 ? t("Trop de tentatives. Patientez quelques minutes avant de réessayer.") : t("Connexion impossible. Vérifiez vos identifiants ou réessayez.");
+    }
+  }
+  function authFeedback(kind, message) {
+    const el = document.getElementById(kind+'Feedback');
+    el.textContent = message; el.hidden = !message;
+    if (message) showToast(message);
+  }
+
   for (const kind of ['signup','login']) {
     document.getElementById(kind+'Form').addEventListener('submit',async event=>{
       event.preventDefault();
@@ -2893,16 +2916,35 @@ if (page === "admin") {
       const password=document.getElementById(kind+'Password').value;
       if(!email || !password || (kind==='signup' && password.length<12)) {showToast(t("Vérifiez les informations saisies (12 caractères minimum à l’inscription)."));return;}
       const button=event.target.querySelector('[type=submit]');if(button.disabled) return;button.disabled=true;
+      authFeedback(kind, '');
       try {
         const result=kind==='signup' ? await db.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname,data:{full_name:document.getElementById('signupName').value.trim()}}}) : await db.auth.signInWithPassword({email,password});
         if(result.error) throw result.error;
-        event.target.reset();closeModal(kind==='signup'?signupModal:loginModal);
-        if(result.data.session) {await restoreSession(result.data.session);showToast(t("Connexion réussie."));}
-        else showToast(t("Vérifiez votre messagerie pour confirmer votre compte."));
-      } catch(error) {showToast(kind==='login' ? t("Connexion impossible. Vérifiez vos identifiants ou réessayez.") : t('Connexion impossible. Vérifiez vos identifiants ou réessayez.'));}
+        document.getElementById(kind+'Password').value = '';
+        if(result.data.session) {
+          closeModal(kind==='signup'?signupModal:loginModal);
+          await restoreSession(result.data.session);
+          if (personalReady) showToast(t("Connexion réussie."));
+        } else {
+          document.getElementById('loginEmail').value = email;
+          authFeedback(kind, t("Vérifiez votre messagerie et les courriers indésirables pour confirmer votre compte. Si votre compte est déjà confirmé, connectez-vous ou utilisez Mot de passe oublié."));
+        }
+      } catch(error) {authFeedback(kind, authErrorMessage(error));}
       finally {button.disabled=false;}
     });
   }
+
+  document.getElementById('resendConfirmation').addEventListener('click',async()=>{
+    const input=document.getElementById('loginEmail');
+    if(!input.value || !input.checkValidity()) {input.focus();authFeedback('login',t("Indiquez votre adresse email."));return;}
+    const button=document.getElementById('resendConfirmation');button.disabled=true;
+    try {
+      const {error}=await db.auth.resend({type:'signup',email:input.value.trim(),options:{emailRedirectTo:location.origin+location.pathname}});
+      if(error) throw error;
+      authFeedback('login',t("Si votre compte attend une confirmation, un nouveau lien sera envoyé. Vérifiez votre messagerie et les courriers indésirables."));
+    } catch(error) {authFeedback('login',authErrorMessage(error));}
+    finally {button.disabled=false;}
+  });
 
   async function logout() {
   const { error } = await db.auth.signOut().catch(error=>({error}));
@@ -3068,7 +3110,7 @@ const accountButton =
       const {error}=await db.auth.resetPasswordForEmail(input.value.trim(),{redirectTo:location.origin+location.pathname});
       if(error) throw error;
       showToast(t("Si un compte existe, un lien de réinitialisation sera envoyé."));
-    } catch { showToast(t("Demande impossible. Réessayez plus tard.")); } finally { button.disabled=false; }
+    } catch(error) { authFeedback("login",authErrorMessage(error)); } finally { button.disabled=false; }
   });
   document.getElementById('recoveryForm').addEventListener('submit',async event=>{
     event.preventDefault(); const password=document.getElementById('recoveryPassword').value;

@@ -1,6 +1,19 @@
 (function(root){
 "use strict";
 const messages={
+"Confirmez votre adresse email avant de vous connecter. Vérifiez aussi les courriers indésirables ou renvoyez le lien de confirmation.":{"fr": "Confirmez votre adresse email avant de vous connecter. Vérifiez aussi les courriers indésirables ou renvoyez le lien de confirmation.", "en": "Confirm your email address before signing in. Check your spam folder or resend the confirmation link."},
+"Adresse email ou mot de passe incorrect.":{"fr": "Adresse email ou mot de passe incorrect.", "en": "Incorrect email address or password."},
+"Trop de tentatives. Patientez quelques minutes avant de réessayer.":{"fr": "Trop de tentatives. Patientez quelques minutes avant de réessayer.", "en": "Too many attempts. Wait a few minutes before trying again."},
+"L’envoi des emails d’inscription est indisponible pour cette adresse. Contactez DealBot.":{"fr": "L’envoi des emails d’inscription est indisponible pour cette adresse. Contactez DealBot.", "en": "Sign-up emails are unavailable for this address. Contact DealBot."},
+"Choisissez un mot de passe plus fort, de 12 caractères minimum.":{"fr": "Choisissez un mot de passe plus fort, de 12 caractères minimum.", "en": "Choose a stronger password with at least 12 characters."},
+"Ce compte existe déjà. Connectez-vous ou utilisez Mot de passe oublié.":{"fr": "Ce compte existe déjà. Connectez-vous ou utilisez Mot de passe oublié.", "en": "This account already exists. Sign in or use Forgot password."},
+"Ce lien a expiré ou a déjà été utilisé. Demandez un nouveau lien.":{"fr": "Ce lien a expiré ou a déjà été utilisé. Demandez un nouveau lien.", "en": "This link has expired or has already been used. Request a new link."},
+"Votre session a expiré. Connectez-vous à nouveau.":{"fr": "Votre session a expiré. Connectez-vous à nouveau.", "en": "Your session has expired. Sign in again."},
+"Vérifiez votre messagerie et les courriers indésirables pour confirmer votre compte. Si votre compte est déjà confirmé, connectez-vous ou utilisez Mot de passe oublié.":{"fr": "Vérifiez votre messagerie et les courriers indésirables pour confirmer votre compte. Si votre compte est déjà confirmé, connectez-vous ou utilisez Mot de passe oublié.", "en": "Check your inbox and spam folder to confirm your account. If your account is already confirmed, sign in or use Forgot password."},
+"Si votre compte attend une confirmation, un nouveau lien sera envoyé. Vérifiez votre messagerie et les courriers indésirables.":{"fr": "Si votre compte attend une confirmation, un nouveau lien sera envoyé. Vérifiez votre messagerie et les courriers indésirables.", "en": "If your account is awaiting confirmation, a new link will be sent. Check your inbox and spam folder."},
+"Renvoyer le lien de confirmation":{"fr": "Renvoyer le lien de confirmation", "en": "Resend confirmation link"},
+"Utilisez au moins 12 caractères. Un email vous permettra de confirmer votre compte avant la première connexion.":{"fr": "Utilisez au moins 12 caractères. Un email vous permettra de confirmer votre compte avant la première connexion.", "en": "Use at least 12 characters. An email will let you confirm your account before signing in for the first time."},
+
   "Source": {"fr": "Source", "en": "Source"},
   "Saisie manuelle": {"fr": "Saisie manuelle", "en": "Manual entry"},
   "Identifiant source": {"fr": "Identifiant source", "en": "Source identifier"},

@@ -383,3 +383,34 @@ test('USD-only imported catalogue is searchable by default and after filter rese
   assert.equal(w.document.querySelectorAll('#exploreDeals .product-card').length,1);
   dom.window.close();
 });
+
+test('auth failures show persistent actionable messages without leaking server text',async()=>{
+  const cases=[['email_not_confirmed',/Confirmez votre adresse/],['invalid_credentials',/incorrect/],['over_email_send_rate_limit',/Trop de tentatives/],['email_address_not_authorized',/indisponible/],['user_already_exists',/existe déjà/],['unexpected',/Connexion impossible/]];
+  for(const [code,expected] of cases){
+    const {dom,w,client}=await setup();
+    client.auth.signInWithPassword=async()=>({error:{code,message:'SECRET SERVER DETAILS'}});
+    w.document.getElementById('loginEmail').value='test@example.com';w.document.getElementById('loginPassword').value='long-test-password';
+    w.document.getElementById('loginForm').dispatchEvent(new w.Event('submit',{cancelable:true,bubbles:true}));await delay();
+    const feedback=w.document.getElementById('loginFeedback');assert.equal(feedback.hidden,false);assert.match(feedback.textContent,expected);assert.doesNotMatch(feedback.textContent,/SECRET/);
+    assert.equal(w.document.querySelector('#loginForm [type=submit]').disabled,false);dom.window.close();
+  }
+});
+test('signup keeps confirmation instructions visible and clears password',async()=>{
+  const {dom,w}=await setup();w.document.getElementById('signupEmail').value='test@example.com';w.document.getElementById('signupPassword').value='long-test-password';
+  w.document.getElementById('signupForm').dispatchEvent(new w.Event('submit',{cancelable:true,bubbles:true}));await delay();
+  assert.match(w.document.getElementById('signupFeedback').textContent,/confirmer votre compte/);assert.equal(w.document.getElementById('signupPassword').value,'');assert.equal(w.document.getElementById('loginEmail').value,'test@example.com');dom.window.close();
+});
+test('confirmation resend validates email, sends correct callback, and releases button on rate limit',async()=>{
+  const {dom,w,client}=await setup();let sent;
+  client.auth.resend=async input=>{sent=input;return {error:{code:'over_email_send_rate_limit'}};};
+  const button=w.document.getElementById('resendConfirmation');button.click();await delay();assert.equal(sent,undefined);
+  w.document.getElementById('loginEmail').value='test@example.com';button.click();await delay();
+  assert.equal(sent.type,'signup');assert.equal(sent.options.emailRedirectTo,'https://test.example/');assert.equal(button.disabled,false);assert.match(w.document.getElementById('loginFeedback').textContent,/Trop de tentatives/);dom.window.close();
+});
+test('expired session signout clears private account data and admin access',async()=>{
+  const {dom,w,authListener}=await setup({user:'user-one',role:'admin',personal:{favorites:[11],compare:[11,12],alerts:[{id:1,productId:11,targetPrice:100,currency:'MUR'}]}});
+  authListener('SIGNED_OUT',null);await delay();
+  assert.equal(w.document.getElementById('accountBox').hidden,true);
+  w.location.hash='#favorites';await delay();assert.equal(w.document.querySelectorAll('#favoriteDeals .product-card').length,0);
+  w.location.hash='#admin';await delay();assert.equal(w.document.getElementById('adminDealsBody').children.length,0);dom.window.close();
+});
