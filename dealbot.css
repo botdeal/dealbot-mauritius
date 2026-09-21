@@ -178,3 +178,9 @@ h1,h2,h3 { letter-spacing:-.035em; }
 }
 @media(max-width:350px) { .product-grid,#featuredDeals { grid-template-columns:1fr; } }
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }
+
+.compare-pick-card { background:transparent; border:0; border-bottom:1px solid var(--line); padding:0 0 16px; }
+.compare-pick-card > img { width:100%; height:180px; object-fit:contain; background:white; padding:12px; margin-bottom:14px; }
+.compare-pick-card > strong { font-size:.88rem; font-weight:500; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.compare-pick-card.selected { border-bottom:3px solid var(--ink); background:transparent; }
+.compare-load-more { grid-column:1/-1; justify-self:center; }

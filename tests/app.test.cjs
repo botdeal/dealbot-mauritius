@@ -472,3 +472,13 @@ test('profile name remains visible when language changes and no synthetic avatar
   assert.equal(w.document.getElementById('accountButton').textContent.trim(),'Test');
   assert.equal(w.document.querySelector('#accountButton img'),null);dom.window.close();
 });
+
+test('comparison catalogue renders progressively while retaining selected off-page offers',async()=>{
+  const products=Array.from({length:1000},(_,index)=>({...deal,id:index+1,imageUrl:'https://example.com/product.jpg'}));
+  const {dom,w}=await setup({user:'user-one',hash:'#compare',catalogDeals:products,personal:{favorites:[],compare:[999],alerts:[]}});
+  assert.equal(w.document.querySelectorAll('#comparePicker .compare-pick-card').length,25);
+  assert.equal(w.document.querySelectorAll('#comparePicker input:checked').length,1);
+  assert.equal(w.document.querySelectorAll('#comparePicker img').length,25);
+  w.document.querySelector('.compare-load-more').click();
+  assert.equal(w.document.querySelectorAll('#comparePicker .compare-pick-card').length,49);dom.window.close();
+});

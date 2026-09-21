@@ -1,6 +1,7 @@
 (function(root){
 "use strict";
 const messages={
+"Voir plus d’offres":{"fr":"Voir plus d’offres","en":"Load more offers"},
 "Aucune offre trouvée.":{"fr":"Aucune offre trouvée.","en":"No matching offers."},
 "Repérez. Comparez. Décidez.":{"fr":"Repérez. Comparez. Décidez.","en":"Discover. Compare. Decide."},
 "Les produits devant. Les données à portée de main.":{"fr":"Les produits devant. Les données à portée de main.","en":"Products up front. Insights within reach."},

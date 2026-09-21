@@ -2063,6 +2063,7 @@ if (page === "admin") {
     return true;
   }
 
+  let comparisonVisible = 24;
   function renderComparePicker() {
     const container =
       document.getElementById(
@@ -2084,7 +2085,8 @@ if (page === "admin") {
 
     empty.hidden = true;
 
-    DEALS.forEach(function (deal) {
+    const comparisonDeals=DEALS.filter((deal,index)=>index<comparisonVisible||state.compare.includes(deal.id));
+    comparisonDeals.forEach(function (deal) {
       const selected =
         state.compare.includes(
           deal.id
@@ -2148,6 +2150,7 @@ if (page === "admin") {
         </label>
       `;
 
+      if(deal.imageUrl){const image=document.createElement('img');image.src=deal.imageUrl;image.alt=deal.name;image.width=240;image.height=180;image.loading='lazy';image.decoding='async';image.referrerPolicy='no-referrer';image.onerror=()=>image.remove();card.prepend(image);}
       card
         .querySelector("input")
         .addEventListener(
@@ -2171,6 +2174,7 @@ if (page === "admin") {
     state.compare.filter(id => !getDeal(id)).forEach(id => {
       container.appendChild(unavailableSelection(() => toggleCompare(id)));
     });
+    if(comparisonVisible<DEALS.length){const more=document.createElement('button');more.type='button';more.className='btn ghost compare-load-more';more.textContent=t("Voir plus d’offres");more.addEventListener('click',()=>{comparisonVisible+=24;renderComparePicker();});container.appendChild(more);}
     updateCompareBar();
     if (!document.getElementById('compareResults').hidden) renderCompareResults();
   }
