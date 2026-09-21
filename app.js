@@ -651,6 +651,8 @@ if (page === "admin") {
 
         </div>
 
+        <details class="dealbot-insight">
+        <summary>DealBot <span>${deal.score}/100</span></summary>
         <div class="trend-row ${trend.className}">
           ${
             t("Indication récente : ")
@@ -676,6 +678,7 @@ if (page === "admin") {
 
         </div>
 
+        </details>
         <label class="compare-check">
 
           <input
@@ -719,8 +722,12 @@ if (page === "admin") {
 
     if (deal.imageUrl) {
       const img=document.createElement('img'); img.src=deal.imageUrl; img.alt=deal.name; img.loading='lazy'; img.referrerPolicy='no-referrer';
-      img.style.cssText='width:100%;height:160px;object-fit:contain'; img.onerror=()=>img.remove();
-      card.querySelector('.product-thumb').appendChild(img);
+      img.decoding='async'; img.width=600; img.height=600;
+      const imageButton=document.createElement('button'); imageButton.type='button'; imageButton.className='product-image-link';
+      imageButton.dataset.detail=String(deal.id); imageButton.setAttribute('aria-label',t("Détails")+' — '+deal.name);
+      imageButton.appendChild(img); card.querySelector('.product-thumb').appendChild(imageButton);
+      card.querySelector('.thumb-mark').hidden=true;
+      img.onerror=()=>{imageButton.remove();card.querySelector('.thumb-mark').hidden=false;};
     }
     return card;
   }
@@ -880,6 +887,13 @@ if (page === "admin") {
     renderStats();
     renderFeatured();
     renderHomeCategories();
+    const suggestions=document.querySelector('.search-examples');
+    suggestions.replaceChildren();
+    CATEGORIES.filter(category=>DEALS.some(deal=>deal.category===category.id)).slice(0,4).forEach(category=>{
+      const button=document.createElement('button');button.type='button';button.textContent=categoryName(category.id);
+      button.addEventListener('click',()=>{state.filters.category=category.id;state.filters.search='';state.visibleDeals=DEALS_PER_PAGE;populateFilters();updateHash('explore');});
+      suggestions.appendChild(button);
+    });
   }
 
   function renderStats() {
@@ -964,9 +978,8 @@ if (page === "admin") {
           );
         }).length;
 
-      const button =
-        document.createElement("button");
-
+      if (!total && container.id === 'homeCategories') return;
+      const button = document.createElement("button");
       button.type = "button";
       button.className = "category-card";
 
@@ -986,6 +999,8 @@ if (page === "admin") {
         </span>
       `;
 
+      const representative=DEALS.find(deal=>deal.category===category.id&&deal.imageUrl);
+      if(representative){const image=document.createElement('img');image.src=representative.imageUrl;image.alt='';image.width=120;image.height=120;image.loading='lazy';image.decoding='async';image.referrerPolicy='no-referrer';image.onerror=()=>image.remove();button.prepend(image);}
       button.addEventListener(
         "click",
         function () {
@@ -1506,6 +1521,56 @@ if (page === "admin") {
       }
     );
 
+  // Local suggestions use the already-loaded public catalogue; no keystroke requests.
+  function bindInstantSearch(input) {
+    const host=input.parentElement;
+    host.classList.add('search-host');
+    const list=document.createElement('div');list.className='instant-results';list.id=input.id+'-results';list.hidden=true;
+    list.setAttribute('role','listbox');list.setAttribute('aria-label',t("Explorer les offres"));host.appendChild(list);
+    input.setAttribute('role','combobox');input.setAttribute('aria-autocomplete','list');input.setAttribute('aria-controls',list.id);input.setAttribute('aria-expanded','false');
+    let timer, matches=[], active=-1;
+    const fold=value=>String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+    function close() {clearTimeout(timer);list.hidden=true;active=-1;input.setAttribute('aria-expanded','false');input.removeAttribute('aria-activedescendant');}
+    function choose(index) {const deal=matches[index];if(!deal)return;close();openDeal(deal.id);}
+    function render() {
+      const words=fold(input.value.trim()).split(/\s+/).filter(Boolean);
+      if (!words.length) {close();return;}
+      matches=DEALS.map(deal=>({deal,text:fold(deal.name+' '+deal.store+' '+categoryName(deal.category))}))
+        .filter(item=>words.every(word=>item.text.includes(word)))
+        .sort((a,b)=>Number(fold(b.deal.name).startsWith(words.join(' ')))-Number(fold(a.deal.name).startsWith(words.join(' ')))||b.deal.score-a.deal.score)
+        .slice(0,6).map(item=>item.deal);
+      active=-1;input.removeAttribute('aria-activedescendant');list.replaceChildren();
+      matches.forEach((deal,index)=>{
+        const option=document.createElement('button');option.type='button';option.className='instant-result';option.id=list.id+'-'+index;
+        option.setAttribute('role','option');option.setAttribute('aria-selected','false');
+        if(deal.imageUrl){const image=document.createElement('img');image.src=deal.imageUrl;image.alt='';image.width=64;image.height=64;image.loading='lazy';image.decoding='async';image.referrerPolicy='no-referrer';image.onerror=()=>image.remove();option.appendChild(image);}
+        const copy=document.createElement('span'),name=document.createElement('strong'),store=document.createElement('small'),price=document.createElement('b');
+        name.textContent=deal.name;store.textContent=deal.store;price.textContent=money(deal.price,deal.currency);copy.append(name,store);option.append(copy,price);
+        option.addEventListener('click',()=>choose(index));list.appendChild(option);
+      });
+      if(!matches.length){const empty=document.createElement('p');empty.textContent=t("Aucune offre trouvée.");list.appendChild(empty);}
+      list.hidden=false;input.setAttribute('aria-expanded','true');
+    }
+    input.addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(render,80);});
+    input.addEventListener('focus',()=>{if(input.value.trim())render();});
+    input.addEventListener('keydown',event=>{
+      if(event.key==='Escape'){close();return;}
+      if(list.hidden)return;
+      if(event.key==='ArrowDown'||event.key==='ArrowUp'){
+        event.preventDefault();if(!matches.length)return;
+        active=(active+(event.key==='ArrowDown'?1:-1)+matches.length)%matches.length;
+        [...list.children].forEach((el,i)=>el.setAttribute('aria-selected',String(i===active)));
+        input.setAttribute('aria-activedescendant',list.children[active].id);
+        list.children[active].scrollIntoView?.({block:'nearest'});
+      } else if(event.key==='Enter'&&active>=0){event.preventDefault();event.stopImmediatePropagation();choose(active);}
+    },true);
+    document.addEventListener('click',event=>{if(!host.contains(event.target))close();});
+    host.addEventListener('focusout',event=>{if(!host.contains(event.relatedTarget))close();});
+    window.addEventListener('hashchange',close);
+  }
+  bindInstantSearch(document.getElementById('heroSearch'));
+  bindInstantSearch(document.getElementById('exploreSearch'));
+
   /* =========================================================
      HERO SEARCH
   ========================================================== */
@@ -1865,13 +1930,29 @@ if (page === "admin") {
       </div>
     `;
 
+    if (deal.imageUrl) {
+      const image=document.createElement('img');image.src=deal.imageUrl;image.alt=deal.name;
+      image.width=800;image.height=800;image.decoding='async';image.referrerPolicy='no-referrer';
+      const visual=container.querySelector('.deal-visual'), mark=visual.querySelector('.deal-visual-mark');
+      mark.hidden=true;image.onerror=()=>{image.remove();mark.hidden=false;};visual.appendChild(image);
+    }
     const history = document.createElement('div'); history.className='state-box'; history.textContent=t("Chargement de l’historique…"); container.appendChild(history);
     api.history(deal.id).then(rows=> {
       history.replaceChildren();
       const title=document.createElement('h3'); title.textContent=t("Historique des prix"); history.appendChild(title);
       if (!rows.length) { history.append(t("Aucun historique disponible.")); return; }
-      const list=document.createElement('ul');
+      const list=document.createElement('ul'); list.className='price-history-list';
       rows.forEach(row=> { const item=document.createElement('li'); item.textContent=new Date(row.recorded_at).toLocaleDateString(state.lang==='en'?'en-GB':'fr-FR')+' — '+money(row.price,row.currency); list.appendChild(item); });
+      const points=rows.filter(row=>row.currency===deal.currency&&Number.isFinite(Number(row.price))&&Number(row.price)>0&&Number.isFinite(Date.parse(row.recorded_at))).sort((a,b)=>Date.parse(a.recorded_at)-Date.parse(b.recorded_at));
+      if(points.length>1){
+        const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');svg.classList.add('price-history-chart');svg.setAttribute('viewBox','0 0 700 180');svg.setAttribute('role','img');svg.setAttribute('aria-label',t("Historique des prix"));
+        const prices=points.map(point=>Number(point.price)),min=Math.min(...prices),max=Math.max(...prices),first=Date.parse(points[0].recorded_at),last=Date.parse(points.at(-1).recorded_at);
+        const coords=points.map(point=>[24+(Date.parse(point.recorded_at)-first)/Math.max(1,last-first)*652,max===min?90:150-(Number(point.price)-min)/(max-min)*120]);
+        const path=document.createElementNS(ns,'path');path.setAttribute('d',coords.map(([x,y],index)=>index?'H'+x+'V'+y:'M'+x+','+y).join(' '));path.setAttribute('fill','none');path.setAttribute('stroke','currentColor');path.setAttribute('stroke-width','2');svg.appendChild(path);
+        coords.forEach(([x,y],index)=>{const dot=document.createElementNS(ns,'circle');dot.setAttribute('cx',x);dot.setAttribute('cy',y);dot.setAttribute('r','4');dot.setAttribute('fill','currentColor');const label=document.createElementNS(ns,'title');label.textContent=money(points[index].price,deal.currency)+' · '+new Date(points[index].recorded_at).toLocaleDateString(state.lang);dot.appendChild(label);svg.appendChild(dot);});
+        [[max,16],[min,176]].forEach(([value,y])=>{const label=document.createElementNS(ns,'text');label.setAttribute('x','24');label.setAttribute('y',y);label.setAttribute('fill','currentColor');label.setAttribute('font-size','12');label.textContent=money(value,deal.currency);svg.appendChild(label);});
+        history.appendChild(svg);
+      }
       history.appendChild(list);
     }).catch(()=>{history.textContent=t("Historique indisponible. Réessayez plus tard.");});
     document
@@ -2187,6 +2268,7 @@ if (page === "admin") {
               .map(function (deal) {
                 return `
                   <th>
+                    ${window.DealBotBackend.safeUrl(deal.imageUrl) ? `<img class="compare-product-image" src="${escapeHTML(window.DealBotBackend.safeUrl(deal.imageUrl))}" alt="" loading="lazy" referrerpolicy="no-referrer" width="240" height="180">` : ''}
                     ${escapeHTML(
                       deal.name
                     )}
@@ -2210,7 +2292,7 @@ if (page === "admin") {
           ${row(
             t("Ancien prix"),
             function (deal) {
-              return money(deal.oldPrice, deal.currency);
+              return deal.oldPrice > 0 ? money(deal.oldPrice, deal.currency) : '—';
             }
           )}
 
@@ -3004,6 +3086,7 @@ if (page === "admin") {
   const accountButton =
     document.getElementById("accountButton");
 
+  accountButton.removeAttribute('data-i18n');
   document.getElementById('adminAccountLink').hidden = currentProfile?.role !== 'admin';
   document.getElementById('saveStatus').textContent = '';
   if (currentUser) {

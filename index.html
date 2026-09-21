@@ -1862,6 +1862,7 @@
       .compare-bar .btn { white-space: normal; }
     }
   </style>
+  <link rel="stylesheet" href="dealbot.css">
   <!-- Supabase JavaScript Client -->
 <script src="vendor/supabase-2.116.0.js"></script>
 <link
@@ -2062,15 +2063,11 @@
               Comparaison · Suivi · Analyse
             </span>
 
-            <h1 data-i18n="Trouvez de meilleures offres avant d'acheter.">
-              Trouvez de meilleures offres avant d'acheter.
+            <h1 data-i18n="Repérez. Comparez. Décidez.">
+              Repérez. Comparez. Décidez.
             </h1>
 
-            <p class="hero-lead" data-i18n="DealBot rassemble, compare et suit les prix pour vous aider à évaluer une offre avant de l'acheter — sans battage, avec des données claires.">
-              DealBot rassemble, compare et suit les prix
-              pour vous aider à évaluer une offre avant
-              de l'acheter — sans battage, avec des données claires.
-            </p>
+            <p class="hero-lead" data-i18n="Les produits devant. Les données à portée de main.">Les produits devant. Les données à portée de main.</p>
 
             <div class="hero-ledger">
 
@@ -2144,23 +2141,6 @@
       </section>
 
 
-      <!-- ADVERTISING AREA -->
-
-      <section class="ad-section">
-        <div class="container">
-
-          <div
-            class="ad-slot horizontal"
-            id="homeAdTop" data-ad-location="home_top"
-            aria-label="Espace publicitaire"
-           data-i18n="Espace partenaire" data-i18n-aria-label="Espace publicitaire">
-            Espace partenaire
-          </div>
-
-        </div>
-      </section>
-
-
       <!-- FEATURED DEALS -->
 
       <section class="section">
@@ -2224,6 +2204,24 @@
 
         </div>
       </section>
+      <!-- ADVERTISING AREA -->
+
+      <section class="ad-section">
+        <div class="container">
+
+          <div
+            class="ad-slot horizontal"
+            id="homeAdTop" data-ad-location="home_top"
+            aria-label="Espace publicitaire"
+           data-i18n="Espace partenaire" data-i18n-aria-label="Espace publicitaire">
+            Espace partenaire
+          </div>
+
+        </div>
+      </section>
+
+
+
 
 
       <!-- CATEGORIES -->
@@ -3968,6 +3966,12 @@
     role="status"
     aria-live="polite"
   ></div>
+  <nav class="mobile-dock" aria-label="Navigation principale" data-i18n-aria-label="Navigation principale">
+    <a href="#explore" data-page="explore" data-i18n="Explorer">Explorer</a>
+    <a href="#favorites" data-page="favorites" data-i18n="Favoris">Favoris</a>
+    <a href="#compare" data-page="compare" data-i18n="Comparer">Comparer</a>
+    <a href="#profile" data-page="profile" data-i18n="Profil">Profil</a>
+  </nav>
   <script src="backend.js"></script>
   <script src="i18n.js"></script>
   <script src="app.js"></script>

@@ -1,6 +1,9 @@
 (function(root){
 "use strict";
 const messages={
+"Aucune offre trouvée.":{"fr":"Aucune offre trouvée.","en":"No matching offers."},
+"Repérez. Comparez. Décidez.":{"fr":"Repérez. Comparez. Décidez.","en":"Discover. Compare. Decide."},
+"Les produits devant. Les données à portée de main.":{"fr":"Les produits devant. Les données à portée de main.","en":"Products up front. Insights within reach."},
 "Confirmez votre adresse email avant de vous connecter. Vérifiez aussi les courriers indésirables ou renvoyez le lien de confirmation.":{"fr": "Confirmez votre adresse email avant de vous connecter. Vérifiez aussi les courriers indésirables ou renvoyez le lien de confirmation.", "en": "Confirm your email address before signing in. Check your spam folder or resend the confirmation link."},
 "Adresse email ou mot de passe incorrect.":{"fr": "Adresse email ou mot de passe incorrect.", "en": "Incorrect email address or password."},
 "Trop de tentatives. Patientez quelques minutes avant de réessayer.":{"fr": "Trop de tentatives. Patientez quelques minutes avant de réessayer.", "en": "Too many attempts. Wait a few minutes before trying again."},

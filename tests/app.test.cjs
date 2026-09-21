@@ -435,3 +435,40 @@ test('unknown callback errors never render URL text and ordinary routes remain i
   assert.equal(normal.w.document.getElementById('loginModal').classList.contains('open'),false);
   normal.dom.window.close();
 });
+
+test('instant search matches actual products and opens the keyboard-selected result',async()=>{
+  const {dom,w}=await setup({catalogDeals:[{...deal,name:'Écran OLED',imageUrl:'https://example.com/screen.jpg'}]});
+  const input=w.document.getElementById('heroSearch');input.value='ecran';input.dispatchEvent(new w.Event('input'));
+  await new Promise(r=>setTimeout(r,120));
+  const list=w.document.getElementById('heroSearch-results');assert.equal(list.hidden,false);
+  assert.equal(list.querySelectorAll('[role=option]').length,1);assert.match(list.textContent,/Écran OLED/);assert.match(list.textContent,/Shop/);
+  assert.equal(list.querySelector('img').getAttribute('src'),'https://example.com/screen.jpg');
+  input.dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true,cancelable:true}));
+  assert.equal(input.getAttribute('aria-activedescendant'),'heroSearch-results-0');
+  input.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));await delay();
+  assert.equal(list.hidden,true);assert.equal(w.location.hash,'#deal-11');dom.window.close();
+});
+
+test('instant search handles no matches, escape and untrusted product names safely',async()=>{
+  const {dom,w}=await setup();const input=w.document.getElementById('heroSearch');
+  input.value='unmatched-unique';input.dispatchEvent(new w.Event('input'));await new Promise(r=>setTimeout(r,120));
+  assert.match(w.document.getElementById('heroSearch-results').textContent,/Aucune offre/);
+  input.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));assert.equal(input.getAttribute('aria-expanded'),'false');
+  input.value='phone';input.dispatchEvent(new w.Event('input'));await new Promise(r=>setTimeout(r,120));
+  assert.equal(w.document.querySelector('#heroSearch-results script'),null);dom.window.close();
+});
+
+test('real product photos link to details and detail keeps the same source image',async()=>{
+  const {dom,w}=await setup({catalogDeals:[{...deal,imageUrl:'https://example.com/real-product.jpg'}]});
+  w.document.querySelector('#featuredDeals .product-image-link').click();await delay();
+  assert.equal(w.location.hash,'#deal-11');
+  assert.equal(w.document.querySelector('.deal-visual img').getAttribute('src'),'https://example.com/real-product.jpg');dom.window.close();
+});
+
+test('profile name remains visible when language changes and no synthetic avatar is created',async()=>{
+  const {dom,w}=await setup({user:'user-one'});
+  assert.equal(w.document.getElementById('accountButton').textContent.trim(),'Test');
+  w.document.querySelector('[data-lang-switch=en]').click();await delay();
+  assert.equal(w.document.getElementById('accountButton').textContent.trim(),'Test');
+  assert.equal(w.document.querySelector('#accountButton img'),null);dom.window.close();
+});
