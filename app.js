@@ -1,6 +1,11 @@
 (function () {
   "use strict";
   const t = window.DealBotI18n.t;
+  // Capture callback errors before Supabase consumes the URL fragment.
+  // Never render the provider's raw error_description (untrusted URL input).
+  const authCallbackParams = new URLSearchParams(window.location.hash.slice(1));
+  const authCallbackError = authCallbackParams.has('error')
+    ? {code: authCallbackParams.get('error_code') || 'callback_error'} : null;
   /* =========================================================
      SUPABASE — CONFIGURATION
   ========================================================== */
@@ -101,8 +106,16 @@
     const revision = authRevision;
     const {data, error} = await db.auth.getSession();
     if (revision !== authRevision) return;
-    if (error) { showToast(t("Session indisponible. Réessayez.")); await restoreSession(null); return; }
-    await restoreSession(data.session);
+    if (error) { showToast(t("Session indisponible. Réessayez.")); await restoreSession(null); }
+    else await restoreSession(data.session);
+    if (authCallbackError) {
+      // Remove only this failed callback, preserving normal route URLs.
+      if (new URLSearchParams(window.location.hash.slice(1)).has('error')) {
+        window.history.replaceState(null, '', window.location.pathname + window.location.search + '#home');
+      }
+      openModal(loginModal);
+      authFeedback('login', authErrorMessage(authCallbackError));
+    }
   }
   // Never await Supabase calls inside onAuthStateChange (auth lock).
   db.auth.onAuthStateChange((event, session) => {

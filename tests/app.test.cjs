@@ -414,3 +414,24 @@ test('expired session signout clears private account data and admin access',asyn
   w.location.hash='#favorites';await delay();assert.equal(w.document.querySelectorAll('#favoriteDeals .product-card').length,0);
   w.location.hash='#admin';await delay();assert.equal(w.document.getElementById('adminDealsBody').children.length,0);dom.window.close();
 });
+
+test('expired confirmation callback opens login with safe persistent explanation and cleans URL',async()=>{
+  const {dom,w}=await setup({hash:'#error=access_denied&error_code=otp_expired&error_description=UNTRUSTED_SECRET'});
+  assert.equal(w.document.getElementById('loginModal').classList.contains('open'),true);
+  assert.match(w.document.getElementById('loginFeedback').textContent,/expiré/);
+  assert.doesNotMatch(w.document.body.textContent,/UNTRUSTED_SECRET/);
+  assert.equal(w.location.hash,'#home');
+  assert.equal(w.document.getElementById('resendConfirmation').disabled,false);
+  dom.window.close();
+});
+
+test('unknown callback errors never render URL text and ordinary routes remain intact',async()=>{
+  const failed=await setup({hash:'#error=access_denied&error_description=%3Cscript%3Ebad%3C%2Fscript%3E'});
+  assert.match(failed.w.document.getElementById('loginFeedback').textContent,/Connexion impossible/);
+  assert.equal(failed.w.document.querySelector('#loginFeedback script'),null);
+  failed.dom.window.close();
+  const normal=await setup({hash:'#favorites'});
+  assert.equal(normal.w.location.hash,'#favorites');
+  assert.equal(normal.w.document.getElementById('loginModal').classList.contains('open'),false);
+  normal.dom.window.close();
+});
