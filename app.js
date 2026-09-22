@@ -543,7 +543,10 @@ if (page === "admin") {
   const hamburger = document.getElementById("hamburger");
   const mobileNav = document.getElementById("mobileNav");
 
+  mobileNav.inert = true;
+
   function closeMobileMenu() {
+    mobileNav.inert = true;
     mobileNav.classList.remove("open");
 
     hamburger.setAttribute(
@@ -556,11 +559,29 @@ if (page === "admin") {
     const opened =
       mobileNav.classList.toggle("open");
 
+    mobileNav.inert = !opened;
+    document.querySelector(".site-header").classList.remove("header-away");
     hamburger.setAttribute(
       "aria-expanded",
       String(opened)
     );
   });
+
+  // Small direction threshold prevents jitter; focused controls stay reachable.
+  const motionHeader = document.querySelector(".site-header");
+  let headerScrollY = Math.max(0, window.scrollY);
+  window.addEventListener("scroll", function () {
+    const y = Math.max(0, window.scrollY);
+    const delta = y - headerScrollY;
+    if (Math.abs(delta) < 8 && y > 120) return;
+    const keepVisible = y <= 120 || delta < 0 || mobileNav.classList.contains("open") ||
+      motionHeader.contains(document.activeElement) || document.querySelector(".modal.open, .account-menu.open") ||
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    motionHeader.classList.toggle("header-away", !keepVisible);
+    headerScrollY = y;
+  }, { passive: true });
+  motionHeader.addEventListener("focusin", () => motionHeader.classList.remove("header-away"));
+  window.addEventListener("hashchange", () => motionHeader.classList.remove("header-away"));
 
   /* =========================================================
      PRODUCT CARD

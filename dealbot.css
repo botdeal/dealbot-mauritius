@@ -98,7 +98,7 @@ h1,h2,h3 { letter-spacing:-.035em; }
 .ad-section { padding-block:16px; }
 .ad-slot,.ad-slot.horizontal { min-height:48px; padding:12px; background:transparent; font-size:.62rem; border-style:dashed; }
 .category-card { border:0; border-bottom:1px solid var(--line); background:transparent; border-radius:0; }
-.category-card:hover { transform:none; background:var(--signal); }
+.category-card:hover { background:transparent; }
 .category-card { display:grid; grid-template-columns:72px 1fr; column-gap:16px; text-align:left; align-items:center; padding:14px 0; }
 .category-card img { grid-row:span 2; width:72px; height:72px; object-fit:contain; background:white; }
 .category-card:not(:has(img)) { grid-template-columns:1fr; }
@@ -235,4 +235,50 @@ h1,h2,h3 { letter-spacing:-.035em; }
 }
 @media(prefers-reduced-motion:reduce) {
   .product-image-link img,.product-card:hover .product-image-link img { transform:none; }
+}
+
+/* Shared physical response: no continuous motion or per-card JavaScript. */
+:root { --motion-spring:cubic-bezier(.2,.8,.25,1.25); --motion-settle:cubic-bezier(.2,.7,.2,1); }
+.product-card,.category-card,.compare-pick-card {
+  transition:transform 240ms var(--motion-spring),box-shadow 240ms var(--motion-settle),background-color 180ms ease;
+  transform-origin:center 65%;
+}
+.product-image-link img { transition:transform 280ms var(--motion-settle); }
+.btn,.main-nav a,.lang-switch button,.hamburger,.mobile-nav a,.mobile-nav button,.account-menu a,.account-menu button {
+  transition:transform 210ms var(--motion-spring),background-color 180ms ease,color 180ms ease,box-shadow 180ms ease;
+}
+.site-header { transition:transform 240ms var(--motion-settle); }
+.site-header.header-away { transform:translateY(-102%); }
+.site-header:focus-within { transform:none; }
+.hamburger span { transition:transform 220ms var(--motion-settle),opacity 140ms ease; }
+.hamburger[aria-expanded="true"] span:first-child { transform:translateY(7px) rotate(45deg); }
+.hamburger[aria-expanded="true"] span:nth-child(2) { opacity:0; }
+.hamburger[aria-expanded="true"] span:last-child { transform:translateY(-7px) rotate(-45deg); }
+#accountButton::before {
+  content:"";display:inline-block;width:18px;height:18px;margin-right:7px;vertical-align:-4px;
+  background:center/contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='1.7'%3E%3Ccircle cx='12' cy='7' r='3.5'/%3E%3Cpath d='M4 21v-2a8 8 0 0 1 16 0v2'/%3E%3C/svg%3E");
+}
+.account-menu { display:flex;visibility:hidden;opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity 160ms ease,transform 200ms var(--motion-settle),visibility 200ms; }
+.account-menu.open { visibility:visible;opacity:1;transform:none;pointer-events:auto; }
+@media(max-width:1080px) {
+  .mobile-nav,.mobile-nav.open { display:flex; }
+  .mobile-nav { max-height:0;visibility:hidden;opacity:0;transform:translateY(-8px);border-bottom:0;pointer-events:none;transition:max-height 260ms var(--motion-settle),opacity 180ms ease,transform 240ms var(--motion-settle),visibility 260ms; }
+  .mobile-nav.open { max-height:calc(100dvh - 78px);visibility:visible;opacity:1;transform:none;pointer-events:auto; }
+}
+@media(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference) {
+  .product-card:hover { transform:translateY(-5px) scale(1.012); }
+  .product-card:hover .product-image-link img { transform:translateZ(30px) scale(1.045) rotateX(1deg) rotateY(-1deg); }
+  .category-card:hover { transform:translateY(-5px);background:#fff;box-shadow:0 12px 20px -15px #18211d70; }
+  .compare-pick-card:hover { transform:translateY(-4px); }
+  .btn:hover,.lang-switch button:hover,.hamburger:hover { transform:translateY(-2px); }
+  .main-nav a:hover { transform:translateY(-2px);background:#0d1611; }
+  .site-header .header-actions .btn:hover,.site-header .lang-switch button:not(.active):hover,.hamburger:hover { background:#0d1611; }
+  .mobile-nav a:hover,.mobile-nav button:hover,.account-menu a:hover,.account-menu button:hover { transform:translateX(3px); }
+}
+@media(prefers-reduced-motion:no-preference) {
+  .btn:active,.lang-switch button:active,.category-card:active,.hamburger:active { transform:translateY(1px) scale(.98);transition-duration:80ms; }
+  .product-image-link:active img { transform:scale(.99);transition-duration:100ms; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .site-header.header-away,.product-card:hover,.category-card:hover,.compare-pick-card:hover,.mobile-nav,.account-menu { transform:none; }
 }

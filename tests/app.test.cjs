@@ -482,3 +482,24 @@ test('comparison catalogue renders progressively while retaining selected off-pa
   w.document.querySelector('.compare-load-more').click();
   assert.equal(w.document.querySelectorAll('#comparePicker .compare-pick-card').length,49);dom.window.close();
 });
+
+test('motion header reveals on upward scroll and keeps open mobile navigation reachable',async()=>{
+  const {dom,w,errors}=await setup();
+  const header=w.document.querySelector('.site-header');
+  const menu=w.document.getElementById('mobileNav');
+  const toggle=w.document.getElementById('hamburger');
+  assert.equal(menu.inert,true);
+  w.scrollY=240;w.dispatchEvent(new w.Event('scroll'));
+  assert.equal(header.classList.contains('header-away'),true);
+  w.scrollY=220;w.dispatchEvent(new w.Event('scroll'));
+  assert.equal(header.classList.contains('header-away'),false);
+  toggle.click();assert.equal(menu.inert,false);
+  assert.equal(toggle.getAttribute('aria-expanded'),'true');
+  w.scrollY=400;w.dispatchEvent(new w.Event('scroll'));
+  assert.equal(header.classList.contains('header-away'),false);
+  toggle.click();assert.equal(menu.inert,true);
+  w.matchMedia=()=>({matches:true});
+  w.scrollY=500;w.dispatchEvent(new w.Event('scroll'));
+  assert.equal(header.classList.contains('header-away'),false);
+  assert.equal(errors.length,0);dom.window.close();
+});
