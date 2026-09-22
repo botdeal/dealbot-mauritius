@@ -467,9 +467,9 @@ test('real product photos link to details and detail keeps the same source image
 
 test('profile name remains visible when language changes and no synthetic avatar is created',async()=>{
   const {dom,w}=await setup({user:'user-one'});
-  assert.equal(w.document.getElementById('accountButton').textContent.trim(),'Test');
+  assert.equal(w.document.querySelector('#accountButton .account-label').textContent.trim(),'Test');
   w.document.querySelector('[data-lang-switch=en]').click();await delay();
-  assert.equal(w.document.getElementById('accountButton').textContent.trim(),'Test');
+  assert.equal(w.document.querySelector('#accountButton .account-label').textContent.trim(),'Test');
   assert.equal(w.document.querySelector('#accountButton img'),null);dom.window.close();
 });
 
@@ -502,4 +502,29 @@ test('motion header reveals on upward scroll and keeps open mobile navigation re
   w.scrollY=500;w.dispatchEvent(new w.Event('scroll'));
   assert.equal(header.classList.contains('header-away'),false);
   assert.equal(errors.length,0);dom.window.close();
+});
+
+test('shopping home pages real offers without duplicates',async()=>{
+  const catalogDeals=Array.from({length:55},(_,i)=>({...deal,id:100+i,name:'Product '+i}));
+  const {dom,w,errors}=await setup({catalogDeals});
+  assert.equal(w.document.querySelectorAll('#featuredDeals .product-card').length,24);
+  w.document.querySelector('.discovery-more').click();
+  assert.equal(w.document.querySelectorAll('#featuredDeals .product-card').length,48);
+  w.document.querySelector('.discovery-more').click();
+  assert.equal(w.document.querySelectorAll('#featuredDeals .product-card').length,55);
+  assert.equal(w.document.querySelector('.discovery-more'),null);
+  assert.equal(new Set([...w.document.querySelectorAll('#featuredDeals [data-detail]')].map(e=>e.dataset.detail)).size,55);
+  assert.equal(errors.length,0);dom.window.close();
+});
+test('account initials and disclosure keyboard navigation preserve account links',async()=>{
+  const {dom,w}=await setup({user:'user-one'});
+  const button=w.document.getElementById('accountButton');
+  assert.equal(button.querySelector('.account-avatar').textContent,'T');
+  assert.equal(button.getAttribute('aria-label'),'Test');
+  button.click();assert.equal(button.getAttribute('aria-expanded'),'true');
+  for(const route of ['profile','favorites','alerts']) assert.ok(w.document.querySelector('#accountMenu a[href="#'+route+'"]'));
+  w.document.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+  assert.equal(button.getAttribute('aria-expanded'),'false');
+  assert.equal(w.document.activeElement,button);
+  dom.window.close();
 });

@@ -938,6 +938,8 @@ if (page === "admin") {
     ).textContent = stores.size;
   }
 
+  let homeVisible = 24;
+
   function renderFeatured() {
     const grid =
       document.getElementById(
@@ -951,13 +953,18 @@ if (page === "admin") {
 
     grid.innerHTML = "";
 
-    const featured =
-      DEALS
-        .slice()
-        .sort(function (a, b) {
-          return Number(b.featured) - Number(a.featured) || b.score - a.score;
-        })
-        .slice(0, 4);
+    // Keep editorial picks first; diversify the remaining score-ranked discovery by category.
+    const ranked = DEALS.slice().sort((a,b) => Number(b.featured)-Number(a.featured) || b.score-a.score);
+    const ordered = ranked.filter(deal => deal.featured);
+    const buckets = new Map();
+    ranked.filter(deal => !deal.featured).forEach(deal => {
+      if (!buckets.has(deal.category)) buckets.set(deal.category, []);
+      buckets.get(deal.category).push(deal);
+    });
+    for (let position=0; ordered.length < ranked.length; position++) {
+      for (const bucket of buckets.values()) if (bucket[position]) ordered.push(bucket[position]);
+    }
+    const featured = ordered.slice(0, homeVisible);
 
     if (!featured.length) {
       empty.hidden = false;
@@ -973,6 +980,17 @@ if (page === "admin") {
     });
 
     bindProductEvents(grid);
+    if (homeVisible < DEALS.length) {
+      const more = document.createElement('button');
+      more.type = 'button'; more.className = 'btn ghost discovery-more';
+      more.textContent = t("Voir plus d’offres");
+      more.addEventListener('click', () => {
+        const previous = homeVisible;
+        homeVisible += 24; renderFeatured();
+        grid.querySelectorAll('.product-image-link')[previous]?.focus({preventScroll:true});
+      });
+      grid.appendChild(more);
+    }
   }
 
   function renderHomeCategories() {
@@ -3112,16 +3130,33 @@ if (page === "admin") {
     document.getElementById("accountButton");
 
   accountButton.removeAttribute('data-i18n');
+  document.getElementById('accountMenu').classList.remove('open');
+  accountButton.setAttribute('aria-expanded', 'false');
   document.getElementById('adminAccountLink').hidden = currentProfile?.role !== 'admin';
   document.getElementById('saveStatus').textContent = '';
   if (currentUser) {
     guest.hidden = true;
     account.hidden = false;
 
-    accountButton.textContent =
-      currentProfile?.full_name ||
-      currentUser.email ||
-      t("Mon compte");
+    const name = currentProfile?.full_name || currentUser.user_metadata?.full_name ||
+      currentUser.email?.split('@')[0] || t("Mon compte");
+    accountButton.replaceChildren();
+    const avatar = document.createElement('span');
+    avatar.className = 'account-avatar'; avatar.setAttribute('aria-hidden', 'true');
+    const initials = name.trim().split(/\s+/).filter(Boolean).slice(0,2).map(word => Array.from(word)[0]).join('').toUpperCase();
+    avatar.textContent = initials;
+    const photo = currentProfile?.avatar_url || currentUser.user_metadata?.avatar_url;
+    const safePhoto = window.DealBotBackend.safeUrl(photo);
+    if (safePhoto) {
+      const image = document.createElement('img'); image.alt = ''; image.width = 32; image.height = 32;
+      image.referrerPolicy = 'no-referrer'; image.decoding = 'async';
+      image.onerror = () => { avatar.textContent = initials; };
+      image.src = safePhoto; avatar.replaceChildren(image);
+    }
+    const label = document.createElement('span'); label.className = 'account-label'; label.textContent = name;
+    accountButton.append(avatar, label);
+    accountButton.setAttribute('aria-label', name);
+    accountButton.setAttribute('aria-controls', 'accountMenu');
   } else {
     guest.hidden = false;
     account.hidden = true;
@@ -3140,6 +3175,19 @@ const accountButton =
     document.getElementById(
       "accountMenu"
     );
+
+  function closeAccountMenu(restoreFocus = false) {
+    accountMenu.classList.remove('open');
+    accountButton.setAttribute('aria-expanded', 'false');
+    if (restoreFocus) accountButton.focus();
+  }
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && accountMenu.classList.contains('open')) closeAccountMenu(true);
+  });
+  accountMenu.addEventListener('click', event => { if (event.target.closest('a,button')) closeAccountMenu(); });
+  document.getElementById('accountBox').addEventListener('focusout', event => {
+    if (!event.currentTarget.contains(event.relatedTarget)) closeAccountMenu();
+  });
 
   accountButton.addEventListener(
     "click",
