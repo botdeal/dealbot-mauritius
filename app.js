@@ -908,6 +908,7 @@ if (page === "admin") {
     renderStats();
     renderFeatured();
     renderHomeCategories();
+    renderDiscoveryShelves();
     const suggestions=document.querySelector('.search-examples');
     suggestions.replaceChildren();
     CATEGORIES.filter(category=>DEALS.some(deal=>deal.category===category.id)).slice(0,4).forEach(category=>{
@@ -916,6 +917,46 @@ if (page === "admin") {
       suggestions.appendChild(button);
     });
   }
+
+  function renderDiscoveryShelves() {
+    const visual = DEALS.filter(deal => deal.imageUrl).slice().sort((a,b) => b.score-a.score);
+    const picks = []; const categories = new Set();
+    for (const deal of visual) if (!categories.has(deal.category)) { picks.push(deal); categories.add(deal.category); }
+    for (const deal of visual) if (picks.length < 12 && !picks.includes(deal)) picks.push(deal);
+    const discounts = visual.filter(deal => discount(deal)>0).sort((a,b) => discount(b)-discount(a)).slice(0,12);
+    for (const [id, items, section] of [['discoveryRail',picks.slice(0,12),'discoveryStage'],['discountRail',discounts,'discountShelf']]) {
+      const rail = document.getElementById(id); rail.replaceChildren();
+      document.getElementById(section).hidden = !items.length;
+      items.forEach((deal,index) => {
+        const card=document.createElement('button');card.type='button';card.className='discovery-tile';card.dataset.detail=String(deal.id);
+        card.setAttribute('aria-label',t('Détails')+' — '+deal.name);
+        const image=document.createElement('img');image.src=deal.imageUrl;image.alt='';image.width=260;image.height=220;
+        image.loading=id==='discoveryRail'&&index<4?'eager':'lazy';image.decoding='async';image.referrerPolicy='no-referrer';
+        image.onerror=()=>{ image.remove(); };
+        const name=document.createElement('span');name.className='discovery-name';name.textContent=deal.name;
+        const price=document.createElement('strong');price.textContent=money(deal.price,deal.currency);
+        const store=document.createElement('small');store.textContent=deal.store;
+        card.append(image,name,price,store);
+        if(id==='discountRail'){const badge=document.createElement('b');badge.className='discovery-discount';badge.textContent='−'+discount(deal)+'%';card.append(badge);}
+        rail.appendChild(card);
+      });
+      bindProductEvents(rail);
+    }
+  }
+  document.querySelectorAll('[data-shelf]').forEach(button => button.addEventListener('click', () => {
+    const rail=document.getElementById(button.dataset.shelf);
+    rail.scrollBy({left:Number(button.dataset.direction)*rail.clientWidth*.8,behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+  }));
+  // One frame per pointer update, only for a mouse; no mobile motion loop.
+  let tiltCard=null, tiltFrame=0;
+  document.addEventListener('pointermove', event => {
+    if(event.pointerType!=='mouse'||!window.matchMedia?.('(prefers-reduced-motion: no-preference)').matches)return;
+    const card=event.target.closest('.discovery-tile');
+    if(tiltCard!==card){tiltCard?.style.removeProperty('--tilt-x');tiltCard?.style.removeProperty('--tilt-y');tiltCard=card;}
+    if(!card||tiltFrame)return;
+    tiltFrame=requestAnimationFrame(()=>{tiltFrame=0;if(tiltCard!==card)return;const r=card.getBoundingClientRect();card.style.setProperty('--tilt-x',((event.clientY-r.top)/r.height-.5)*-5+'deg');card.style.setProperty('--tilt-y',((event.clientX-r.left)/r.width-.5)*5+'deg');});
+  },{passive:true});
+  document.addEventListener('pointerout',event=>{if(!event.relatedTarget){tiltCard?.style.removeProperty('--tilt-x');tiltCard?.style.removeProperty('--tilt-y');tiltCard=null;}});
 
   function renderStats() {
     document.getElementById(

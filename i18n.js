@@ -1,6 +1,10 @@
 (function(root){
 "use strict";
 const messages={
+"À découvrir":{"fr":"À découvrir","en":"Discover your next find"},
+"Remises à explorer":{"fr":"Remises à explorer","en":"Explore discounts"},
+"Précédent":{"fr":"Précédent","en":"Previous"},
+"Suivant":{"fr":"Suivant","en":"Next"},
 "Voir plus d’offres":{"fr":"Voir plus d’offres","en":"Load more offers"},
 "Aucune offre trouvée.":{"fr":"Aucune offre trouvée.","en":"No matching offers."},
 "Repérez. Comparez. Décidez.":{"fr":"Repérez. Comparez. Décidez.","en":"Discover. Compare. Decide."},

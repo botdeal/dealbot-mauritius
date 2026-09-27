@@ -528,3 +528,17 @@ test('account initials and disclosure keyboard navigation preserve account links
   assert.equal(w.document.activeElement,button);
   dom.window.close();
 });
+
+test('discovery shelves use real images, discounts and working detail navigation',async()=>{
+  const {dom,w,errors}=await setup({catalogDeals:[{...deal,imageUrl:'https://example.com/real.jpg'},{...deal,id:12,oldPrice:0,imageUrl:'https://example.com/other.jpg'}]});
+  assert.equal(w.document.querySelectorAll('#discoveryRail .discovery-tile').length,2);
+  assert.equal(w.document.querySelectorAll('#discountRail .discovery-tile').length,1);
+  assert.equal(w.document.querySelector('#discountRail .discovery-discount').textContent,'−20%');
+  w.document.querySelector('#discoveryRail [data-detail]').click();await delay();
+  assert.equal(w.location.hash,'#deal-11');assert.equal(errors.length,0);dom.window.close();
+});
+test('empty catalogue leaves discovery shelves hidden',async()=>{
+  const {dom,w}=await setup({empty:true});
+  assert.equal(w.document.getElementById('discoveryStage').hidden,true);
+  assert.equal(w.document.getElementById('discountShelf').hidden,true);dom.window.close();
+});

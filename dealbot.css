@@ -329,3 +329,71 @@ h1,h2,h3 { letter-spacing:-.035em; }
   .account-label { font-size:.72rem; }
   .account-menu { position:fixed;top:72px;right:12px;max-width:calc(100vw - 24px); }
 }
+
+/* DealBot shelves: a continuous product-led surface. */
+#page-home { background:#f1f3ed; }
+#page-home .hero { padding:14px 0 10px;border:0;background:transparent; }
+#page-home .hero-grid { grid-template-columns:1fr;gap:0; }
+#page-home .hero-grid > div:first-child { display:none; }
+#page-home .search-panel { padding:0;border:0;max-width:880px;width:100%;margin:auto; }
+#page-home .search-panel > label { position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%); }
+#page-home .search-examples { margin-top:5px; }
+#page-home .search-row input { min-height:48px; }
+.header-inner { min-height:68px; }
+.site-header { box-shadow:0 4px 0 #0b130f,0 9px 20px #18211d14; }
+.shelf-heading { display:flex;justify-content:space-between;align-items:center;margin-bottom:10px; }
+.shelf-heading h2 { font-size:1.12rem;letter-spacing:-.03em;font-weight:650; }
+.shelf-controls { display:flex;gap:5px; }
+.shelf-controls button { width:36px;height:36px;border:1px solid #c5cdc1;background:#fff;border-radius:50%;box-shadow:0 2px 0 #ccd3c7; }
+.discovery-stage { padding-top:8px;padding-bottom:12px; }
+.discovery-rail { display:grid;grid-auto-flow:column;grid-auto-columns:minmax(170px,calc((100% - 60px)/6));gap:12px;overflow-x:auto;scroll-snap-type:x proximity;padding:5px 2px 14px;scrollbar-width:thin;scrollbar-color:#a6b49e transparent; }
+.discovery-tile { position:relative;display:flex;flex-direction:column;min-width:0;text-align:left;padding:10px;border:1px solid #d5ddcf;border-bottom:3px solid #bbc7b4;border-radius:12px;background:#fff;box-shadow:0 6px 10px -7px #18211d60;scroll-snap-align:start;color:var(--ink);transform:perspective(800px) rotateX(var(--tilt-x,0deg)) rotateY(var(--tilt-y,0deg));transition:transform 180ms var(--motion-settle),box-shadow 180ms ease; }
+.discovery-tile img { width:100%;height:155px;object-fit:contain;margin-bottom:9px;mix-blend-mode:multiply; }
+.discovery-name { font-size:.74rem;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.7em; }
+.discovery-tile strong { font-size:1.15rem;margin-top:7px;letter-spacing:-.035em; }
+.discovery-tile small { font-size:.65rem;color:var(--ink-soft); }
+.discovery-discount { position:absolute;top:7px;left:7px;background:var(--signal);padding:4px 7px;border-radius:3px;font-size:.72rem; }
+.deal-shelf { padding-top:10px;padding-bottom:12px; }
+.compact-rail { grid-auto-columns:minmax(155px,calc((100% - 84px)/8)); }
+.compact-rail img { height:100px; }
+#page-home .section { padding-block:16px;border:0; }
+#page-home .section-head .eyebrow { display:none; }
+#page-home .section-head h2 { font-size:1.18rem; }
+#homeCategories { background:transparent;border:0;gap:12px;padding-bottom:8px; }
+#homeCategories .category-card { flex-basis:98px;gap:4px; }
+#homeCategories .category-card img { width:80px;height:66px;border-radius:14px;padding:5px; }
+#homeCategories .category-name { font-size:.7rem; }
+#homeCategories .category-count { display:none; }
+#featuredDeals { grid-template-columns:repeat(6,minmax(0,1fr));gap:18px 12px; }
+#featuredDeals .product-card { background:#fff;border:1px solid #d7dfd1;border-bottom:3px solid #bcc8b5;border-radius:10px;padding:8px; }
+#featuredDeals .product-thumb { border:0;box-shadow:none;background:#fff; }
+#featuredDeals .product-card .product-name,#featuredDeals .product-card:first-child .product-name { font-size:.77rem; }
+#featuredDeals .product-body { gap:4px;padding-bottom:0; }
+#featuredDeals .price-now { font-size:1.12rem; }
+#featuredDeals .card-actions { gap:4px; }
+#featuredDeals .card-actions .btn { padding:7px 4px;min-height:36px;font-size:.65rem; }
+#featuredDeals .save-toggle { top:5px;right:5px;font-size:.6rem;padding:4px;min-height:30px; }
+#page-home .how-grid { display:none; }
+#page-home .section:has(.how-grid) { display:none; }
+@media(hover:hover) and (prefers-reduced-motion:no-preference) { .discovery-tile:hover { box-shadow:0 12px 18px -10px #18211d65; } }
+@media(max-width:1100px) { #featuredDeals { grid-template-columns:repeat(4,minmax(0,1fr)); } }
+@media(max-width:620px) {
+  .container { padding-inline:14px; }
+  .header-inner { min-height:62px;gap:8px; }
+  .logo { font-size:1.3rem; }
+  .logo::before { width:12px;height:18px;margin-right:6px;border-width:3px; }
+  .header-actions { gap:5px; }
+  #openSignup { display:none; }
+  #page-home .search-row input { font-size:16px;min-width:0; }
+  .discovery-rail { grid-auto-columns:44%;gap:9px; }
+  .discovery-tile img { height:124px; }
+  .compact-rail { grid-auto-columns:37%; }
+  .compact-rail img { height:90px; }
+  .shelf-heading h2 { font-size:1rem; }
+  #featuredDeals { grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 9px; }
+  #homeCategories .category-card { flex-basis:80px; }
+  #homeCategories .category-card img { width:66px;height:58px; }
+  #accountButton { max-width:114px; }
+  .account-menu { top:65px; }
+}
+@media(prefers-reduced-motion:reduce) { .discovery-tile { transform:none; } }
