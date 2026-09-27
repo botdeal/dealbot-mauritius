@@ -2045,7 +2045,8 @@
        HOME PAGE
   ========================== -->
 
-  <main>
+  <div class="market-strip container"><label><span data-i18n="Pays">Pays</span> <select id="marketCountry"><option value="">—</option><option value="MU" data-i18n="Maurice">Maurice</option><option value="FR">France</option><option value="US">USA</option><option value="GB">UK</option><option value="CA">Canada</option></select></label><label><span data-i18n="Devise">Devise</span> <select id="marketCurrency"><option value="">Original</option><option>MUR</option><option>EUR</option><option>USD</option><option>GBP</option><option>CAD</option></select></label><span id="marketNotice"></span><a href="https://www.exchangerate-api.com" target="_blank" rel="noopener noreferrer">Rates by Exchange Rate API</a></div>
+<main>
 
     <section
       class="page active"
@@ -2859,13 +2860,7 @@
         </div>
 
 
-        <div class="intel-note" data-i18n="Le DealBot Score peut être éditorial ou calculé automatiquement. La méthode est indiquée pour chaque offre, sans prédiction de prix. Il ne constitue ni une garantie de prix, ni une recommandation financière, ni une garantie sur le vendeur ou le produit.">
-          Le DealBot Score peut être éditorial ou calculé automatiquement.
-          La méthode est indiquée pour chaque offre, sans prédiction de prix. Il ne constitue
-          ni une garantie de prix, ni une recommandation
-          financière, ni une garantie sur le vendeur ou le produit.
-        </div>
-
+        <p class="intel-note" data-i18n="Prix observés, pas de prédiction. Aucune popularité supposée.">Prix observés, pas de prédiction. Aucune popularité supposée.</p>
 
         <div
           class="intel-grid"
@@ -3334,6 +3329,7 @@
             des services proposés.
           </p>
 
+          <p data-i18n="Le pays approximatif fourni par l’hébergeur peut adapter la devise, sans GPS. Vos choix pays/devise restent sur votre appareil. Aucune adresse IP visiteur n’est transmise au fournisseur de taux.">Le pays approximatif fourni par l’hébergeur peut adapter la devise, sans GPS. Vos choix pays/devise restent sur votre appareil. Aucune adresse IP visiteur n’est transmise au fournisseur de taux.</p>
           <p data-i18n="Vos favoris, comparaisons, alertes et messages sont enregistrés dans votre compte. La session de connexion et la langue sont conservées sur votre appareil.">
             Vos favoris, comparaisons, alertes et messages sont enregistrés dans votre compte. La session de connexion et la langue sont conservées sur votre appareil.
           </p>
@@ -3982,7 +3978,8 @@
   </nav>
   <script src="backend.js"></script>
   <script src="i18n.js"></script>
-  <script src="app.js"></script>
+  <script src="commerce.js"></script>
+<script src="app.js"></script>
 
 </body>
 </html>

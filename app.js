@@ -161,6 +161,10 @@
     { id: "accessories", fr: "Accessoires", en: "Accessories" }
   ];
 
+  const commerce = window.DealBotCommerce;
+  let market = {country:'',currency:''}, exchange = null;
+  try { const saved=JSON.parse(localStorage.getItem('dealbot_market_v1')); if(saved && (saved.country==='' || commerce.currencies[saved.country])) market={country:saved.country,currency:Object.values(commerce.currencies).includes(saved.currency)?saved.currency:''}; } catch {}
+  let ALL_MARKET_DEALS = [];
   let DEALS = [];
   let ADMIN_DEALS = [];
   let catalogRevision = 0;
@@ -177,7 +181,8 @@
       const result = await api.catalog();
       if (revision !== catalogRevision) return;
       ADMIN_DEALS = currentProfile?.role === 'admin' ? result.deals : [];
-      DEALS = result.deals.filter(d => d.published);
+      ALL_MARKET_DEALS = result.deals.filter(d => d.published);
+      DEALS = ALL_MARKET_DEALS.filter(d=>commerce.available(d,market.country));
       if (!currencyChosen) state.filters.currency = catalogueCurrency();
       CATEGORIES.splice(0,CATEGORIES.length,...result.categories.filter(c=>c.is_active).sort((a,b)=>a.sort_order-b.sort_order).map(c=>({id:c.slug,fr:c.name_fr,en:c.name_en})));
       catalogState = 'ready';
@@ -277,7 +282,7 @@
     return category[state.lang] || category.fr;
   }
 
-  function money(value, currency = "MUR") {
+  function nativeMoney(value, currency = "MUR") {
     return new Intl.NumberFormat(
       state.lang === "fr" ? "fr-FR" : "en-GB",
       {
@@ -286,6 +291,37 @@
         maximumFractionDigits: 2
       }
     ).format(value);
+  }
+
+  function money(value,currency="MUR") {
+    const converted=market.currency && market.currency!==currency ? commerce.convert(value,currency,market.currency,exchange) : null;
+    return converted===null ? nativeMoney(value,currency) : '≈ '+nativeMoney(converted,market.currency)+' ('+nativeMoney(value,currency)+')';
+  }
+  function marketNotice() {
+    document.getElementById('marketCountry').value=market.country;
+    document.getElementById('marketCurrency').value=market.currency;
+    document.getElementById('marketNotice').textContent=t("Livraison à confirmer chez le marchand.")+' '+(exchange?.rates?t("Conversion indicative · taux du")+' '+new Date(exchange.date).toLocaleDateString(state.lang):t("Conversion indisponible : prix d’origine."));
+  }
+  function applyMarket() {
+    DEALS=ALL_MARKET_DEALS.filter(d=>commerce.available(d,market.country));
+    marketNotice(); refreshCurrentPage();
+  }
+  async function initMarket() {
+    for(const [id,key] of [['marketCountry','country'],['marketCurrency','currency']]) document.getElementById(id).addEventListener('change',event=>{
+      market[key]=event.target.value;
+      if(key==='country') market.currency=commerce.currencies[market.country]||'';
+      try{localStorage.setItem('dealbot_market_v1',JSON.stringify(market));}catch{}
+      applyMarket();
+    });
+    marketNotice();
+    if(typeof window.fetch!=='function')return;
+    try {
+      const response=await fetch('/api/market'); if(!response.ok)return;
+      exchange=await response.json();
+      let manual=false;try{manual=!!localStorage.getItem('dealbot_market_v1');}catch{}
+      if(!manual&&commerce.currencies[exchange.country])market={country:exchange.country,currency:commerce.currencies[exchange.country]};
+      applyMarket();
+    }catch{}
   }
 
   function discount(deal) {
@@ -2016,21 +2052,30 @@ if (page === "admin") {
       const visual=container.querySelector('.deal-visual'), mark=visual.querySelector('.deal-visual-mark');
       mark.hidden=true;image.onerror=()=>{image.remove();mark.hidden=false;};visual.appendChild(image);
     }
+    const offers=commerce.equivalents(deal,ALL_MARKET_DEALS,market.country);
+    const comparison=document.createElement('section');comparison.className='merchant-offers state-box';
+    const heading=document.createElement('h3');heading.textContent=t("Même produit, même variante");comparison.append(heading);
+    if(new Set(offers.map(o=>o.merchantId)).size<2){comparison.append(t("Aucune seconde offre marchande vérifiée pour cette variante."));}
+    else offers.forEach(offer=>{
+      const row=document.createElement('div');row.className='merchant-offer';
+      const text=document.createElement('span');text.textContent=offer.store+' · '+money(offer.price,offer.currency)+' · '+t("Livraison à confirmer chez le marchand.");
+      const button=document.createElement('button');button.type='button';button.className='btn ghost small';button.textContent=t("Voir l'offre");button.addEventListener('click',()=>goToMerchant(offer));row.append(text,button);comparison.append(row);
+    });container.append(comparison);
     const history = document.createElement('div'); history.className='state-box'; history.textContent=t("Chargement de l’historique…"); container.appendChild(history);
     api.history(deal.id).then(rows=> {
       history.replaceChildren();
       const title=document.createElement('h3'); title.textContent=t("Historique des prix"); history.appendChild(title);
       if (!rows.length) { history.append(t("Aucun historique disponible.")); return; }
       const list=document.createElement('ul'); list.className='price-history-list';
-      rows.forEach(row=> { const item=document.createElement('li'); item.textContent=new Date(row.recorded_at).toLocaleDateString(state.lang==='en'?'en-GB':'fr-FR')+' — '+money(row.price,row.currency); list.appendChild(item); });
+      rows.forEach(row=> { const item=document.createElement('li'); item.textContent=new Date(row.recorded_at).toLocaleDateString(state.lang==='en'?'en-GB':'fr-FR')+' — '+nativeMoney(row.price,row.currency); list.appendChild(item); });
       const points=rows.filter(row=>row.currency===deal.currency&&Number.isFinite(Number(row.price))&&Number(row.price)>0&&Number.isFinite(Date.parse(row.recorded_at))).sort((a,b)=>Date.parse(a.recorded_at)-Date.parse(b.recorded_at));
       if(points.length>1){
         const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');svg.classList.add('price-history-chart');svg.setAttribute('viewBox','0 0 700 180');svg.setAttribute('role','img');svg.setAttribute('aria-label',t("Historique des prix"));
         const prices=points.map(point=>Number(point.price)),min=Math.min(...prices),max=Math.max(...prices),first=Date.parse(points[0].recorded_at),last=Date.parse(points.at(-1).recorded_at);
         const coords=points.map(point=>[24+(Date.parse(point.recorded_at)-first)/Math.max(1,last-first)*652,max===min?90:150-(Number(point.price)-min)/(max-min)*120]);
         const path=document.createElementNS(ns,'path');path.setAttribute('d',coords.map(([x,y],index)=>index?'H'+x+'V'+y:'M'+x+','+y).join(' '));path.setAttribute('fill','none');path.setAttribute('stroke','currentColor');path.setAttribute('stroke-width','2');svg.appendChild(path);
-        coords.forEach(([x,y],index)=>{const dot=document.createElementNS(ns,'circle');dot.setAttribute('cx',x);dot.setAttribute('cy',y);dot.setAttribute('r','4');dot.setAttribute('fill','currentColor');const label=document.createElementNS(ns,'title');label.textContent=money(points[index].price,deal.currency)+' · '+new Date(points[index].recorded_at).toLocaleDateString(state.lang);dot.appendChild(label);svg.appendChild(dot);});
-        [[max,16],[min,176]].forEach(([value,y])=>{const label=document.createElementNS(ns,'text');label.setAttribute('x','24');label.setAttribute('y',y);label.setAttribute('fill','currentColor');label.setAttribute('font-size','12');label.textContent=money(value,deal.currency);svg.appendChild(label);});
+        coords.forEach(([x,y],index)=>{const dot=document.createElementNS(ns,'circle');dot.setAttribute('cx',x);dot.setAttribute('cy',y);dot.setAttribute('r','4');dot.setAttribute('fill','currentColor');const label=document.createElementNS(ns,'title');label.textContent=nativeMoney(points[index].price,deal.currency)+' · '+new Date(points[index].recorded_at).toLocaleDateString(state.lang);dot.appendChild(label);svg.appendChild(dot);});
+        [[max,16],[min,176]].forEach(([value,y])=>{const label=document.createElementNS(ns,'text');label.setAttribute('x','24');label.setAttribute('y',y);label.setAttribute('fill','currentColor');label.setAttribute('font-size','12');label.textContent=nativeMoney(value,deal.currency);svg.appendChild(label);});
         history.appendChild(svg);
       }
       history.appendChild(list);
@@ -2458,149 +2503,47 @@ if (page === "admin") {
      DEALBOT INTELLIGENCE
   ========================================================== */
 
+  const historyCache=new Map();
+  function realHistory(id) {
+    const saved=historyCache.get(id);
+    if(saved && Date.now()-saved.at<60000)return saved.promise;
+    const promise=api.history(id).catch(error=>{historyCache.delete(id);throw error;});
+    historyCache.set(id,{promise,at:Date.now()});return promise;
+  }
+  function priceChart(host,rows,deal) {
+    const points=rows.filter(r=>r.currency===deal.currency&&Number.isFinite(Number(r.price))&&Number(r.price)>0&&Number.isFinite(Date.parse(r.recorded_at))).sort((a,b)=>Date.parse(a.recorded_at)-Date.parse(b.recorded_at));
+    host.replaceChildren();
+    if(points.length<2){host.textContent=t("Historique insuffisant pour une courbe.");return;}
+    const values=points.map(r=>Number(r.price)),min=Math.min(...values),max=Math.max(...values),first=Date.parse(points[0].recorded_at),last=Date.parse(points.at(-1).recorded_at);
+    const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');
+    svg.setAttribute('viewBox','0 0 600 210');svg.setAttribute('role','img');svg.setAttribute('aria-label',t("Historique des prix")+' · '+deal.currency);svg.classList.add('price-history-chart');
+    const coords=points.map(r=>[70+(Date.parse(r.recorded_at)-first)/Math.max(1,last-first)*510,max===min?95:160-(Number(r.price)-min)/(max-min)*110]);
+    const path=document.createElementNS(ns,'path');path.setAttribute('d',coords.map(([x,y],i)=>(i?'H'+x+'V'+y:'M'+x+','+y)).join(' '));path.setAttribute('fill','none');path.setAttribute('stroke','currentColor');path.setAttribute('stroke-width','3');svg.append(path);
+    for(const [label,x,y] of [[nativeMoney(max,deal.currency),8,25],[nativeMoney(min,deal.currency),8,180],[new Date(first).toLocaleDateString(state.lang),70,205],[new Date(last).toLocaleDateString(state.lang),465,205]]){const text=document.createElementNS(ns,'text');text.setAttribute('x',x);text.setAttribute('y',y);text.setAttribute('font-size','12');text.setAttribute('fill','currentColor');text.textContent=label;svg.append(text);}
+    const dot=document.createElementNS(ns,'circle');dot.setAttribute('r','5');dot.setAttribute('fill','currentColor');svg.append(dot);
+    const slider=document.createElement('input');slider.type='range';slider.min=0;slider.max=points.length-1;slider.value=points.length-1;slider.setAttribute('aria-label',t("Historique des prix"));
+    const output=document.createElement('output');output.setAttribute('aria-live','polite');
+    function select(){const i=Number(slider.value),r=points[i];dot.setAttribute('cx',coords[i][0]);dot.setAttribute('cy',coords[i][1]);output.textContent=new Date(r.recorded_at).toLocaleString(state.lang)+' · '+nativeMoney(r.price,r.currency);}
+    slider.addEventListener('input',select);select();host.append(svg,slider,output);
+  }
   function renderIntelligence() {
-    const grid =
-      document.getElementById(
-        "intelligenceGrid"
-      );
-
-    const empty =
-      document.getElementById(
-        "intelligenceEmpty"
-      );
-
-    grid.innerHTML = "";
-
-    const list =
-      DEALS
-        .slice()
-        .sort(function (a, b) {
-          return b.score - a.score;
-        })
-        .slice(0, 8);
-
-    if (!list.length) {
-      empty.hidden = false;
-      return;
-    }
-
-    empty.hidden = true;
-
-    list.forEach(function (deal) {
-      const card =
-        document.createElement(
-          "article"
-        );
-
-      card.className =
-        "intel-card";
-
-      card.innerHTML = `
-        <h3>
-          ${escapeHTML(
-            deal.name
-          )}
-        </h3>
-
-        <div class="intel-store">
-          ${escapeHTML(
-            deal.store
-          )}
-          ·
-          ${escapeHTML(
-            categoryName(
-              deal.category
-            )
-          )}
-        </div>
-
-        <div class="gauge-row">
-
-          <svg
-            width="74"
-            height="74"
-            viewBox="0 0 74 74"
-            aria-hidden="true"
-          >
-
-            <circle
-              cx="37"
-              cy="37"
-              r="29"
-              fill="none"
-              stroke="var(--line)"
-              stroke-width="7"
-            ></circle>
-
-            <circle
-              cx="37"
-              cy="37"
-              r="29"
-              fill="none"
-              stroke="var(--accent)"
-              stroke-width="7"
-              stroke-linecap="round"
-              transform="rotate(-90 37 37)"
-              stroke-dasharray="${2 * Math.PI * 29}"
-              stroke-dashoffset="${
-                2 *
-                Math.PI *
-                29 *
-                (
-                  1 -
-                  deal.score /
-                  100
-                )
-              }"
-            ></circle>
-
-          </svg>
-
-          <div class="gauge-score">
-            ${deal.score}
-            <span>/100</span>
-          </div>
-
-        </div>
-
-        <p>${t("Réduction affichée")} : ${discount(deal)} %.
-        ${deal.scoreMethod==='automatic-v1'
-          ? (t("Score automatique v1 : réduction (50), stock (20), description/image (10), marchand vérifié (20)."))
-          : (t("Score éditorial saisi par l’administrateur."))}
-        ${t("Sans prédiction de prix.")}</p>
-        <button
-          type="button"
-          class="btn ghost small"
-          data-intel-detail="${deal.id}"
-          style="margin-top:16px;"
-        >
-          ${
-            t("Voir l'offre")
-          }
-        </button>
-      `;
-
-      grid.appendChild(card);
+    const grid=document.getElementById('intelligenceGrid');grid.replaceChildren();
+    const list=DEALS.slice().sort((a,b)=>b.score-a.score).slice(0,8);
+    document.getElementById('intelligenceEmpty').hidden=!!list.length;
+    let coverage=document.getElementById('intelligenceCoverage');
+    if(!coverage){coverage=document.createElement('div');coverage.id='intelligenceCoverage';coverage.className='intel-coverage';grid.before(coverage);}
+    coverage.replaceChildren();
+    const title=document.createElement('strong');title.textContent=t("Catalogue par catégorie · offres disponibles");coverage.append(title);
+    const counts=new Map();DEALS.forEach(d=>counts.set(d.category,(counts.get(d.category)||0)+1));
+    [...counts].sort((a,b)=>b[1]-a[1]).forEach(([category,count])=>{const item=document.createElement('button');item.type='button';item.className='coverage-item';item.textContent=categoryName(category)+' · '+count;item.addEventListener('click',()=>{state.filters.category=category;document.getElementById('categoryFilter').value=category;updateHash('explore');});coverage.append(item);});
+    list.forEach(deal=>{
+      const card=document.createElement('article');card.className='intel-card intel-terminal';
+      card.innerHTML=`<div class="intel-product"><h3>${escapeHTML(deal.name)}</h3><span>${escapeHTML(deal.store)} · ${escapeHTML(categoryName(deal.category))}</span><strong>${money(deal.price,deal.currency)}</strong><span>${t("Score")} ${deal.score}/100 · ${deal.scoreMethod==='automatic-v1'?t("Automatique"):t("Éditorial")}</span></div><div class="intel-history">${t("Chargement de l’historique…")}</div><button type="button" class="btn ghost small" data-intel-detail="${deal.id}">${t("Voir l'offre")}</button>`;
+      if(deal.imageUrl){const img=document.createElement('img');img.src=deal.imageUrl;img.alt=deal.name;img.loading='lazy';img.decoding='async';img.width=320;img.height=240;img.referrerPolicy='no-referrer';card.prepend(img);}
+      const method=document.createElement('details');method.className='score-method';const summary=document.createElement('summary');summary.textContent=t("Méthode du score");method.append(summary,deal.scoreMethod==='automatic-v1'?t("Score automatique v1 : réduction (50), stock (20), description/image (10), marchand vérifié (20)."):t("Score éditorial saisi par l’administrateur."));card.append(method);
+      card.querySelector('button').addEventListener('click',()=>openDeal(deal.id));grid.append(card);
+      const chart=card.querySelector('.intel-history');realHistory(deal.id).then(rows=>priceChart(chart,rows,deal)).catch(()=>{chart.textContent=t("Historique indisponible. Réessayez plus tard.");});
     });
-
-    grid
-      .querySelectorAll(
-        "[data-intel-detail]"
-      )
-      .forEach(function (button) {
-        button.addEventListener(
-          "click",
-          function () {
-            openDeal(
-              Number(
-                button.getAttribute(
-                  "data-intel-detail"
-                )
-              )
-            );
-          }
-        );
-      });
   }
 
   function indicatorHTML(
@@ -2821,7 +2764,7 @@ if (page === "admin") {
               ${
                 t("Objectif")
               }:
-              ${money(alert.targetPrice, alert.currency || deal.currency)}
+              ${nativeMoney(alert.targetPrice, alert.currency || deal.currency)}
 
               ·
 
@@ -3867,6 +3810,7 @@ adminDealForm.addEventListener('submit', async function(event) {
   ========================================================== */
 
   function refreshCurrentPage() {
+    marketNotice();
     renderStats();
     renderFeatured();
 
@@ -4012,6 +3956,7 @@ adminDealForm.addEventListener('submit', async function(event) {
   document.getElementById('catalogStatus').querySelector('button').addEventListener('click',()=>{if(!personalReady) initializeSupabaseAuth();else loadCatalogFromSupabase();});
   document.getElementById('currencyFilter').addEventListener('change',event=>{currencyChosen=true;state.filters.currency=event.target.value;state.visibleDeals=DEALS_PER_PAGE;renderExplore();});
   init();
+  initMarket();
   loadAds();
   initializeSupabaseAuth().catch(()=> { catalogState='error'; showCatalogStatus(); });
   document.addEventListener('visibilitychange', () => {

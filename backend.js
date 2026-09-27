@@ -14,7 +14,7 @@
     const merchant = merchants.find(m => String(m.id) === String(deal.merchant_id));
     const category = categories.find(c => String(c.id) === String(deal.category_id));
     return {
-      id: Number(deal.id), name: deal.name, category: category?.slug || 'uncategorized',
+      commerce: deal.commerce || null, id: Number(deal.id), name: deal.name, category: category?.slug || 'uncategorized',
       categoryId: deal.category_id, merchantId: deal.merchant_id, store: merchant?.name || 'Marchand non renseigné',
       price: Number(deal.price), oldPrice: deal.old_price == null ? Number(deal.price) : Number(deal.old_price),
       score: Number(deal.dealbot_score), availability: ({in_stock:'available', out_of_stock:'outofstock',limited:'limited'})[deal.availability] || 'unknown',

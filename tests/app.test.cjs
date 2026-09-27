@@ -27,6 +27,7 @@ async function setup({catalogDeals=null,storedLang=null,user=null,role='user',em
   w.DealBotBackend={...backend,create:()=>api};
   if(storedLang)w.localStorage.setItem('dealbot_language_v2',storedLang);
   w.eval(fs.readFileSync('i18n.js','utf8'));
+  w.eval(fs.readFileSync('commerce.js','utf8'));
   w.eval(script); await delay();
   return {dom,w,calls,errors,authListener,api,client};
 }
@@ -541,4 +542,14 @@ test('empty catalogue leaves discovery shelves hidden',async()=>{
   const {dom,w}=await setup({empty:true});
   assert.equal(w.document.getElementById('discoveryStage').hidden,true);
   assert.equal(w.document.getElementById('discountShelf').hidden,true);dom.window.close();
+});
+test('market preferences persist and preserve native prices when FX is unavailable',async()=>{
+ const {dom,w,errors}=await setup();const select=w.document.getElementById('marketCountry');select.value='MU';select.dispatchEvent(new w.Event('change'));
+ assert.equal(JSON.parse(w.localStorage.getItem('dealbot_market_v1')).country,'MU');assert.equal(w.document.getElementById('marketCurrency').value,'MUR');assert.match(w.document.getElementById('marketNotice').textContent,/prix d’origine/);assert.equal(errors.length,0);dom.window.close();
+});
+test('Intelligence uses real photos and honest insufficient history state',async()=>{
+ const {dom,w,errors}=await setup({hash:'#intelligence',catalogDeals:[{...deal,imageUrl:'https://example.com/real.jpg'}]});await delay();assert.equal(w.document.querySelector('#intelligenceGrid img').getAttribute('src'),'https://example.com/real.jpg');assert.match(w.document.querySelector('.intel-history').textContent,/insuffisant/);assert.equal(errors.length,0);dom.window.close();
+});
+test('Intelligence history supports keyboard range navigation with original currency',async()=>{
+ const {dom,w,api}=await setup();api.history=async()=>[{price:100,currency:'MUR',recorded_at:'2026-09-01'},{price:90,currency:'MUR',recorded_at:'2026-09-02'}];w.location.hash='#intelligence';await delay();await delay();const slider=w.document.querySelector('.intel-history input');assert.ok(slider);slider.value='0';slider.dispatchEvent(new w.Event('input'));assert.match(w.document.querySelector('.intel-history output').textContent,/100/);dom.window.close();
 });

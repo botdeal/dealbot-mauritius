@@ -1,6 +1,24 @@
 (function(root){
 "use strict";
 const messages={
+"Le pays approximatif fourni par l’hébergeur peut adapter la devise, sans GPS. Vos choix pays/devise restent sur votre appareil. Aucune adresse IP visiteur n’est transmise au fournisseur de taux.":{"fr": "Le pays approximatif fourni par l’hébergeur peut adapter la devise, sans GPS. Vos choix pays/devise restent sur votre appareil. Aucune adresse IP visiteur n’est transmise au fournisseur de taux.", "en": "The approximate country provided by the host may adapt the currency, without GPS. Your country/currency choices stay on your device. No visitor IP address is sent to the exchange-rate provider."},
+"Maurice":{"fr":"Maurice","en":"Mauritius"},
+
+"Catalogue par catégorie · offres disponibles":{"fr": "Catalogue par catégorie · offres disponibles", "en": "Catalogue by category · available offers"},
+"Méthode du score":{"fr": "Méthode du score", "en": "Score method"},
+"Prix observés, pas de prédiction. Aucune popularité supposée.":{"fr": "Prix observés, pas de prédiction. Aucune popularité supposée.", "en": "Observed prices, not predictions. No assumed popularity."},
+
+"Pays":{"fr": "Pays", "en": "Country"},
+"Devise":{"fr": "Devise", "en": "Currency"},
+"Livraison à confirmer chez le marchand.":{"fr": "Livraison à confirmer chez le marchand.", "en": "Confirm delivery with the merchant."},
+"Conversion indicative · taux du":{"fr": "Conversion indicative · taux du", "en": "Estimated conversion · rates dated"},
+"Conversion indisponible : prix d’origine.":{"fr": "Conversion indisponible : prix d’origine.", "en": "Conversion unavailable: original prices."},
+"Historique insuffisant pour une courbe.":{"fr": "Historique insuffisant pour une courbe.", "en": "Not enough price history for a chart."},
+"Automatique":{"fr": "Automatique", "en": "Automatic"},
+"Éditorial":{"fr": "Éditorial", "en": "Editorial"},
+"Même produit, même variante":{"fr": "Même produit, même variante", "en": "Same product, same variant"},
+"Aucune seconde offre marchande vérifiée pour cette variante.":{"fr": "Aucune seconde offre marchande vérifiée pour cette variante.", "en": "No second verified merchant offer for this variant."},
+
 "À découvrir":{"fr":"À découvrir","en":"Discover your next find"},
 "Remises à explorer":{"fr":"Remises à explorer","en":"Explore discounts"},
 "Précédent":{"fr":"Précédent","en":"Previous"},
