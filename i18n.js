@@ -1,6 +1,8 @@
 (function(root){
 "use strict";
 const messages={
+"Sur la période affichée":{"fr":"Sur la période affichée","en":"Over the displayed period"},
+
 "Le pays approximatif fourni par l’hébergeur peut adapter la devise, sans GPS. Vos choix pays/devise restent sur votre appareil. Aucune adresse IP visiteur n’est transmise au fournisseur de taux.":{"fr": "Le pays approximatif fourni par l’hébergeur peut adapter la devise, sans GPS. Vos choix pays/devise restent sur votre appareil. Aucune adresse IP visiteur n’est transmise au fournisseur de taux.", "en": "The approximate country provided by the host may adapt the currency, without GPS. Your country/currency choices stay on your device. No visitor IP address is sent to the exchange-rate provider."},
 "Maurice":{"fr":"Maurice","en":"Mauritius"},
 

@@ -2524,7 +2524,9 @@ if (page === "admin") {
     const slider=document.createElement('input');slider.type='range';slider.min=0;slider.max=points.length-1;slider.value=points.length-1;slider.setAttribute('aria-label',t("Historique des prix"));
     const output=document.createElement('output');output.setAttribute('aria-live','polite');
     function select(){const i=Number(slider.value),r=points[i];dot.setAttribute('cx',coords[i][0]);dot.setAttribute('cy',coords[i][1]);output.textContent=new Date(r.recorded_at).toLocaleString(state.lang)+' · '+nativeMoney(r.price,r.currency);}
-    slider.addEventListener('input',select);select();host.append(svg,slider,output);
+    slider.addEventListener('input',select);select();
+    const delta=document.createElement('div');delta.className='history-delta';const change=(values.at(-1)/values[0]-1)*100;delta.textContent=(change>0?'↑ ':change<0?'↓ ':'→ ')+Math.abs(change).toFixed(2)+' % · '+t("Sur la période affichée");
+    host.append(delta,svg,slider,output);
   }
   function renderIntelligence() {
     const grid=document.getElementById('intelligenceGrid');grid.replaceChildren();

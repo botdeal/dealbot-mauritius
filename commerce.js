@@ -4,6 +4,7 @@ const currencies={MU:'MUR',FR:'EUR',US:'USD',GB:'GBP',CA:'CAD'};
 function identity(offer){
  const c=offer.commerce;
  if(!c||c.verified!==true||c.variant_complete!==true||!c.variant||typeof c.variant!=='object'||Array.isArray(c.variant))return null;
+ if(Object.values(c.variant).some(v=>v===null||!['string','number','boolean'].includes(typeof v)||(typeof v==='number'&&!Number.isFinite(v))))return null;
  const variant=Object.keys(c.variant).sort().map(k=>[k,String(c.variant[k]).trim().toLowerCase()]);
  if(!variant.length||variant.some(([k,v])=>!v))return null;
  const gtin=String(c.gtin||'');

@@ -405,3 +405,5 @@ h1,h2,h3 { letter-spacing:-.035em; }
 @media(max-width:700px){#intelligenceGrid{grid-template-columns:1fr}.intel-terminal{grid-template-columns:100px minmax(0,1fr);padding:16px}.intel-terminal>img{height:135px}.market-strip{gap:8px}.market-strip #marketNotice{flex-basis:100%;font-size:.65rem}.merchant-offer{flex-wrap:wrap}}
 
 .intel-coverage{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 24px}.intel-coverage>strong{flex-basis:100%;font-size:.8rem}.coverage-item{border:1px solid var(--line);padding:8px 12px;border-radius:8px;background:transparent;color:inherit;font:inherit;font-size:.75rem;cursor:pointer}.score-method{grid-column:1/-1;font-size:.7rem;color:var(--ink-soft)}
+
+#page-intelligence{padding-top:16px}#page-intelligence .page-header{padding-top:8px;margin-bottom:16px}#page-intelligence .page-header h1{font-size:clamp(1.6rem,3vw,2.2rem)}#page-intelligence .intel-note{padding:10px 14px;margin-bottom:20px}.history-delta{font-size:.75rem;font-variant-numeric:tabular-nums;letter-spacing:.02em;padding-top:8px}.intel-terminal{box-shadow:0 4px 0 rgba(24,41,32,.08);border-top:3px solid var(--ink)}.intel-product strong{font-variant-numeric:tabular-nums}

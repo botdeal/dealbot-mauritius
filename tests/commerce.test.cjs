@@ -3,7 +3,7 @@ const offer={id:1,commerce:{verified:true,variant_complete:true,brand:'Acme',mpn
 test('exact source-backed identity matches across merchants, never across variants',()=>{
  const second={...offer,id:2,merchantId:2};assert.equal(c.equivalents(offer,[offer,second]).length,2);
  assert.equal(c.identity({...offer,commerce:{...offer.commerce,variant:{capacity:'256 GB',color:'black'}}})===c.identity(offer),false);
- for(const commerce of [null,{}, {...offer.commerce,verified:false},{...offer.commerce,variant_complete:false},{...offer.commerce,variant:{}}])assert.equal(c.identity({commerce}),null);
+ for(const commerce of [null,{}, {...offer.commerce,verified:false},{...offer.commerce,variant_complete:false},{...offer.commerce,variant:{}},{...offer.commerce,variant:{color:{name:'black'}}}])assert.equal(c.identity({commerce}),null);
 });
 test('GTIN validates check digit and supported lengths',()=>{
  assert.ok(c.identity({commerce:{...offer.commerce,gtin:'4006381333931'}}));
