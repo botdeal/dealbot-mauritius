@@ -20,6 +20,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
+from source_engine import Source, SourceOrchestrator, demand_priority
 
 FEED = 'https://feed.admitad.com/api/external/feed_export/50003?min_price=75&max_price=100&website_id=2993975&currency=USD&products_discount_only=true&format=yml'
 ENDPOINT = 'https://rrcxlohsbxfldflqfgqx.supabase.co/functions/v1/dealbot-sync'
@@ -150,7 +151,7 @@ def yml_records(reader):
         if not part: raise ET.ParseError('truncated offers envelope')
         buffer += part
 
-def collect(stream, per_category=100):
+def collect(stream, per_category=100, demands=()):
     if not 1 <= per_category <= 100: raise ValueError('selection_limit')
     reader = BoundedReader(stream); categories = {}; selected = {}; heaps = collections.defaultdict(list)
     counts = collections.Counter()
@@ -183,7 +184,7 @@ def collect(stream, per_category=100):
                         db.execute('insert into seen values (?,?)', (pid, digest)); counts['eligible'] += 1
                         category = offer['category']['external_id']; heap = heaps[category]
                         # Stable selection independent of feed ordering, evenly bounded by category.
-                        rank = int(hashlib.sha256(pid.encode()).hexdigest(), 16)
+                        rank = int(hashlib.sha256(pid.encode()).hexdigest(), 16) - demand_priority(offer, demands) * (1 << 256)
                         if len(heap) < per_category:
                             heapq.heappush(heap, (-rank, pid)); selected[pid] = offer
                         elif rank < -heap[0][0]:
@@ -237,15 +238,16 @@ def publish(offers):
         time.sleep(5)
     raise ValueError('autopilot_run_pending_check_admin')
 
-def load_offers(per_category, opener=urllib.request.urlopen, pause=time.sleep):
+def load_offers(per_category, opener=urllib.request.urlopen, pause=time.sleep, demands=()):
     # A broken stream has no safe byte cursor/ETag advertised by this source.
     # Restart once from the official URL; never reconcile an unfinished scan.
     for attempt in range(2):
+        for demand in demands: demand['matches'] = 0
         try:
             with opener(FEED, timeout=60) as stream:
                 if stream.status != 200 or stream.headers.get_content_type() not in ('application/xml', 'text/xml'):
                     raise ValueError('unexpected_feed_response')
-                return collect(stream, per_category)
+                return collect(stream, per_category, demands)
         except urllib.error.HTTPError as error:
             if error.code not in (429,500,502,503,504) or attempt: raise
         except (TimeoutError, urllib.error.URLError, http.client.IncompleteRead, ConnectionError):
@@ -259,13 +261,28 @@ def main():
     parser = argparse.ArgumentParser(); parser.add_argument('--per-category', type=int, default=3)
     parser.add_argument('--publish', action='store_true'); parser.add_argument('--output')
     args = parser.parse_args()
-    offers, summary = load_offers(args.per_category)
+    demands = []
+    if args.publish:
+        try:
+            demands = send({'op': 'demand'}).get('demands', [])
+        except ValueError:
+            # Telemetry outage must not stop the existing real catalogue import.
+            print('Demand priorities unavailable; retaining stable selection', flush=True)
+    orchestrator = SourceOrchestrator([Source(SOURCE, 'Admitad', 'AliExpress WW', True, True, 'scheduled_feed', load_offers)])
+    offers, summary = orchestrator.collect(SOURCE, args.per_category, demands)
+    summary['demand_queries'] = len(demands)
+    summary['demand_matches'] = sum(d.get('matches', 0) for d in demands)
     print(json.dumps({'feed': 'Admitad AliExpress WW Hot Products', **summary}), flush=True)
     if args.output:
         with open(args.output, 'w') as out: json.dump(offers, out, ensure_ascii=False)
     if args.publish:
         result = publish(offers)
         print(json.dumps({'run_id': result['id'], 'state': result['state'], 'result': result.get('result')}))
+        if demands:
+            try:
+                send({'op': 'demand_report', 'queries': [{'query': d['query'], 'country': d['country'], 'matches': d.get('matches', 0)} for d in demands]})
+            except ValueError:
+                print('Catalogue imported; demand report will retry next schedule', flush=True)
 
 if __name__ == '__main__':
     try: main()

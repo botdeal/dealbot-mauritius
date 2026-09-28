@@ -26,6 +26,22 @@ function convert(value,from,to,fx){
  if(!Number.isFinite(age)||age< -3600000||age>3*86400000||![fx?.rates?.[from],fx?.rates?.[to]].every(n=>Number.isFinite(n)&&n>0))return null;
  return Number(value)*fx.rates[to]/fx.rates[from];
 }
-const api={currencies,identity,available,equivalents,convert};
+function matchEvidence(a,b){
+ const left=identity(a),right=identity(b);
+ return !left||!right?{comparable:false,confidence:0,reason:'identity_or_variant_unverified'}:left!==right?{comparable:false,confidence:0,reason:'different_reference_or_variant'}:{comparable:true,confidence:1,reason:'verified_reference_and_complete_variant'};
+}
+function compare(offer,offers,country,currency,fx){
+ const rows=equivalents(offer,offers,country).map(o=>{
+  const price=convert(o.price,o.currency,currency,fx),delivery=o.commerce?.shipping?.[country];
+  const shipping=delivery&&Number.isFinite(delivery.amount)&&delivery.amount>=0&&typeof delivery.currency==='string'?convert(delivery.amount,delivery.currency,currency,fx):null;
+  const total=price!==null&&shipping!==null&&delivery.tax_included===true?price+shipping:null;
+  return {offer:o,price,shipping,total,estimated:o.currency!==currency||(delivery?.currency&&delivery.currency!==currency),evidence:matchEvidence(offer,o)};
+ });
+ // No commission input. Unknown delivery/tax/stock can never win a total-cost label.
+ const comparable=rows.filter(r=>r.total!==null&&['available','limited'].includes(r.offer.availability));
+ rows.sort((a,b)=>(a.total??a.price??Infinity)-(b.total??b.price??Infinity)||a.offer.id-b.offer.id);
+ return {rows,bestTotalId:comparable.length>=2&&comparable.length===rows.length?comparable.sort((a,b)=>a.total-b.total||a.offer.id-b.offer.id)[0].offer.id:null};
+}
+const api={currencies,identity,available,equivalents,convert,matchEvidence,compare};
 if(typeof module!=='undefined')module.exports=api;else root.DealBotCommerce=api;
 })(typeof window!=='undefined'?window:this);

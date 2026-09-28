@@ -14,7 +14,7 @@
     const merchant = merchants.find(m => String(m.id) === String(deal.merchant_id));
     const category = categories.find(c => String(c.id) === String(deal.category_id));
     return {
-      commerce: deal.commerce || null, id: Number(deal.id), name: deal.name, category: category?.slug || 'uncategorized',
+      lastCheckedAt:deal.last_checked_at||null, affiliateNetwork:deal.sync_source?.startsWith('admitad-')?'Admitad':null, commerce: deal.commerce || null, id: Number(deal.id), name: deal.name, category: category?.slug || 'uncategorized',
       categoryId: deal.category_id, merchantId: deal.merchant_id, store: merchant?.name || 'Marchand non renseigné',
       price: Number(deal.price), oldPrice: deal.old_price == null ? Number(deal.price) : Number(deal.old_price),
       score: Number(deal.dealbot_score), availability: ({in_stock:'available', out_of_stock:'outofstock',limited:'limited'})[deal.availability] || 'unknown',
@@ -48,6 +48,10 @@
         const [deals, categories, merchants] = await Promise.all(['deals','categories','merchants'].map(t => allRows(db,t)));
         return {deals: deals.map(d => normalizeDeal(d,merchants,categories)), categories, merchants};
       },
+      async search(query,country) {const r=await checked(db.rpc('search_dealbot',{query,country:country||''}));return {...r,offers:r.offers.map(d=>normalizeDeal(d,[{id:d.merchant_id,name:d.merchant_name}],[{id:d.category_id,slug:d.category_slug}]))};},
+      demand(query,country,visitor) {return checked(db.rpc('record_search_demand',{query,country:country||'',visitor}));},
+      demandClick(ticket,id) {return checked(db.rpc('attribute_search_click',{ticket,offer_id:id}));},
+      demandAdmin() {return checked(db.rpc('admin_search_demand'));},
       async personal(userId) {
         const [favorites, compare, alerts] = await Promise.all(['favorites','compare_items','price_alerts'].map(t => checked(db.from(t).select('*').eq('user_id', userId))));
         return {favorites: favorites.map(x=>Number(x.deal_id)), compare:compare.map(x=>Number(x.deal_id)),

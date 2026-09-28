@@ -87,3 +87,17 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(len(calls),2)
 
 if __name__=='__main__': unittest.main()
+
+class DemandTests(unittest.TestCase):
+    def test_priority_comes_from_real_query_matches(self):
+        from source_engine import demand_priority
+        demands=[{'query':'monitor 128gb','weight':8}]
+        self.assertEqual(demand_priority({'name':'Portable Monitor 128 GB'},demands),8)
+        self.assertEqual(demand_priority({'name':'Portable Monitor 256 GB'},demands),0)
+        self.assertEqual(demands[0]['matches'],1)
+    def test_unauthorized_source_and_missing_affiliate_link_fail_closed(self):
+        from source_engine import Source,SourceOrchestrator
+        loader=lambda *a,**k:([{'original_url':'https://example.org'}],{})
+        with self.assertRaisesRegex(ValueError,'source_not_authorized'):SourceOrchestrator([]).collect('unknown',1)
+        source=Source('test','test','test',True,True,'scheduled_feed',loader)
+        with self.assertRaisesRegex(ValueError,'official_affiliate_link_missing'):SourceOrchestrator([source]).collect('test',1)

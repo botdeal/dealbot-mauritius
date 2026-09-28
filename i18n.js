@@ -1,6 +1,26 @@
 (function(root){
 "use strict";
 const messages={
+"Les recherches produit normalisées sont agrégées par pays pendant 30 jours pour améliorer le catalogue. Un identifiant de session aléatoire limite les doublons, puis son empreinte est supprimée après 24 heures. Aucun compte ni adresse IP n’est associé à ces statistiques. Les requêtes contenant une adresse email, une URL ou un long numéro ne sont pas enregistrées. Le signal Do Not Track désactive cette collecte dans le navigateur.":{"fr": "Les recherches produit normalisées sont agrégées par pays pendant 30 jours pour améliorer le catalogue. Un identifiant de session aléatoire limite les doublons, puis son empreinte est supprimée après 24 heures. Aucun compte ni adresse IP n’est associé à ces statistiques. Les requêtes contenant une adresse email, une URL ou un long numéro ne sont pas enregistrées. Le signal Do Not Track désactive cette collecte dans le navigateur.", "en": "Normalized product searches are aggregated by country for 30 days to improve the catalogue. A random session identifier limits duplicates; its hash is deleted after 24 hours. No account or IP address is attached to these statistics. Queries containing an email address, URL or long number are not recorded. The browser Do Not Track signal disables this collection."},
+
+"Livraison":{"fr": "Livraison", "en": "Delivery"},
+"Coût total inconnu":{"fr": "Coût total inconnu", "en": "Total cost unknown"},
+"Total":{"fr": "Total", "en": "Total"},
+"Lien non affilié":{"fr": "Lien non affilié", "en": "Non-affiliate link"},
+"Actualisé le":{"fr": "Actualisé le", "en": "Updated on"},
+
+"Recherche dans l’index DealBot…":{"fr": "Recherche dans l’index DealBot…", "en": "Searching the DealBot index…"},
+"Couverture limitée. La collecte autorisée est quotidienne ; aucune recherche web immédiate n’est disponible.":{"fr": "Couverture limitée. La collecte autorisée est quotidienne ; aucune recherche web immédiate n’est disponible.", "en": "Limited coverage. The authorized feed is collected daily; live web search is not available."},
+"Résultats actualisés depuis l’index DealBot.":{"fr": "Résultats actualisés depuis l’index DealBot.", "en": "Results refreshed from the DealBot index."},
+"Index indisponible : les résultats locaux restent utilisables.":{"fr": "Index indisponible : les résultats locaux restent utilisables.", "en": "Index unavailable: local results remain usable."},
+"Chargement des recherches…":{"fr": "Chargement des recherches…", "en": "Loading search demand…"},
+"Demande du catalogue":{"fr": "Demande du catalogue", "en": "Catalogue demand"},
+"Aucune recherche agrégée pour le moment.":{"fr": "Aucune recherche agrégée pour le moment.", "en": "No aggregated searches yet."},
+"recherches":{"fr": "recherches", "en": "searches"},
+"résultats":{"fr": "résultats", "en": "results"},
+"recherches avec clic":{"fr": "recherches avec clic", "en": "searches with a click"},
+"Données de recherche indisponibles.":{"fr": "Données de recherche indisponibles.", "en": "Search data unavailable."},
+
 "Sur la période affichée":{"fr":"Sur la période affichée","en":"Over the displayed period"},
 
 "Le pays approximatif fourni par l’hébergeur peut adapter la devise, sans GPS. Vos choix pays/devise restent sur votre appareil. Aucune adresse IP visiteur n’est transmise au fournisseur de taux.":{"fr": "Le pays approximatif fourni par l’hébergeur peut adapter la devise, sans GPS. Vos choix pays/devise restent sur votre appareil. Aucune adresse IP visiteur n’est transmise au fournisseur de taux.", "en": "The approximate country provided by the host may adapt the currency, without GPS. Your country/currency choices stay on your device. No visitor IP address is sent to the exchange-rate provider."},

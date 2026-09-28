@@ -162,6 +162,9 @@
   ];
 
   const commerce = window.DealBotCommerce;
+  const universal = window.DealBotSearch;
+  const searchCache = new Map(), searchTickets = new Map();
+  let lastSearchKey = null;
   let market = {country:'',currency:''}, exchange = null;
   try { const saved=JSON.parse(localStorage.getItem('dealbot_market_v1')); if(saved && (saved.country==='' || commerce.currencies[saved.country])) market={country:saved.country,currency:Object.values(commerce.currencies).includes(saved.currency)?saved.currency:''}; } catch {}
   let ALL_MARKET_DEALS = [];
@@ -303,6 +306,7 @@
     document.getElementById('marketNotice').textContent=t("Livraison à confirmer chez le marchand.")+' '+(exchange?.rates?t("Conversion indicative · taux du")+' '+new Date(exchange.date).toLocaleDateString(state.lang):t("Conversion indisponible : prix d’origine."));
   }
   function applyMarket() {
+    lastSearchKey=null;
     DEALS=ALL_MARKET_DEALS.filter(d=>commerce.available(d,market.country));
     marketNotice(); refreshCurrentPage();
   }
@@ -1360,28 +1364,12 @@ if (page === "admin") {
           return false;
         }
 
-        if (search) {
-          const searchable = [
-            deal.name,
-            deal.store,
-            categoryName(
-              deal.category
-            )
-          ]
-            .join(" ")
-            .toLowerCase();
-
-          if (
-            !searchable.includes(
-              search
-            )
-          ) {
-            return false;
-          }
-        }
+        if (search && !universal.relevance({...deal,category:categoryName(deal.category)},search)) return false;
 
         return true;
       });
+
+    if(search && !['price-asc','price-desc','discount'].includes(state.filters.sort))return universal.rank(list,search,market.country);
 
     if (
       state.filters.sort ===
@@ -1637,6 +1625,38 @@ if (page === "admin") {
       }
     );
 
+  function searchVisitor() {
+    try {let id=sessionStorage.getItem('dealbot_click_session');if(!id){id=crypto.randomUUID();sessionStorage.setItem('dealbot_click_session',id);}return id;}catch{return null;}
+  }
+  async function discoverSearch(value,status,onResults) {
+    const parsed=universal.parse(value),key=market.country+'|'+parsed.normalized;
+    if(parsed.normalized.length<3)return;
+    lastSearchKey=key;
+    const telemetry=universal.telemetryQuery(value),visitor=searchVisitor();
+    if(telemetry && visitor && navigator.doNotTrack!=='1' && typeof api.demand==='function' && !searchTickets.has(key)) {
+      searchTickets.set(key,null);
+      api.demand(telemetry,market.country,visitor).then(r=>{if(r.ticket)searchTickets.set(key,r.ticket);}).catch(()=>searchTickets.delete(key));
+    }
+    if(typeof api.search!=='function')return;
+    const cached=searchCache.get(key);
+    if(cached && Date.now()-cached.at<120000){status.textContent=cached.message;return;}
+    status.textContent=t("Recherche dans l’index DealBot…");
+    try {
+      const result=await Promise.race([api.search(parsed.normalized,market.country),new Promise((_,reject)=>setTimeout(()=>reject(Error('search_timeout')),4000))]);
+      if(lastSearchKey!==key)return;
+      for(const offer of result.offers||[]) {
+        if(!offer.published)continue;
+        const existing=ALL_MARKET_DEALS.find(d=>d.id===offer.id);
+        if(existing)Object.assign(existing,offer);else if(ALL_MARKET_DEALS.length<10000)ALL_MARKET_DEALS.push(offer);
+      }
+      DEALS=ALL_MARKET_DEALS.filter(d=>commerce.available(d,market.country));
+      const count=universal.rank(DEALS,parsed.normalized,market.country).length;
+      const message=count<3?t("Couverture limitée. La collecte autorisée est quotidienne ; aucune recherche web immédiate n’est disponible."):t("Résultats actualisés depuis l’index DealBot.");
+      status.textContent=message;searchCache.set(key,{at:Date.now(),message});if(searchCache.size>50)searchCache.delete(searchCache.keys().next().value);
+      onResults?.();
+    }catch{if(lastSearchKey===key)status.textContent=t("Index indisponible : les résultats locaux restent utilisables.");}
+  }
+
   // Local suggestions use the already-loaded public catalogue; no keystroke requests.
   function bindInstantSearch(input) {
     const host=input.parentElement;
@@ -1644,17 +1664,15 @@ if (page === "admin") {
     const list=document.createElement('div');list.className='instant-results';list.id=input.id+'-results';list.hidden=true;
     list.setAttribute('role','listbox');list.setAttribute('aria-label',t("Explorer les offres"));host.appendChild(list);
     input.setAttribute('role','combobox');input.setAttribute('aria-autocomplete','list');input.setAttribute('aria-controls',list.id);input.setAttribute('aria-expanded','false');
-    let timer, matches=[], active=-1;
+    const status=document.createElement('p');status.className='search-discovery-status';status.setAttribute('role','status');status.id=input.id+'-status';host.after(status);
+    let timer, discoveryTimer, matches=[], active=-1;
     const fold=value=>String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-    function close() {clearTimeout(timer);list.hidden=true;active=-1;input.setAttribute('aria-expanded','false');input.removeAttribute('aria-activedescendant');}
-    function choose(index) {const deal=matches[index];if(!deal)return;close();openDeal(deal.id);}
+    function close() {clearTimeout(timer);clearTimeout(discoveryTimer);list.hidden=true;active=-1;input.setAttribute('aria-expanded','false');input.removeAttribute('aria-activedescendant');}
+    function choose(index) {const deal=matches[index];if(!deal)return;discoverSearch(input.value,status);close();openDeal(deal.id);}
     function render() {
       const words=fold(input.value.trim()).split(/\s+/).filter(Boolean);
       if (!words.length) {close();return;}
-      matches=DEALS.map(deal=>({deal,text:fold(deal.name+' '+deal.store+' '+categoryName(deal.category))}))
-        .filter(item=>words.every(word=>item.text.includes(word)))
-        .sort((a,b)=>Number(fold(b.deal.name).startsWith(words.join(' ')))-Number(fold(a.deal.name).startsWith(words.join(' ')))||b.deal.score-a.deal.score)
-        .slice(0,6).map(item=>item.deal);
+      matches=universal.rank(DEALS.map(d=>({...d,category:categoryName(d.category)})),input.value,market.country).slice(0,6);
       active=-1;input.removeAttribute('aria-activedescendant');list.replaceChildren();
       matches.forEach((deal,index)=>{
         const option=document.createElement('button');option.type='button';option.className='instant-result';option.id=list.id+'-'+index;
@@ -1667,7 +1685,7 @@ if (page === "admin") {
       if(!matches.length){const empty=document.createElement('p');empty.textContent=t("Aucune offre trouvée.");list.appendChild(empty);}
       list.hidden=false;input.setAttribute('aria-expanded','true');
     }
-    input.addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(render,80);});
+    input.addEventListener('input',()=>{clearTimeout(timer);clearTimeout(discoveryTimer);lastSearchKey=market.country+'|'+universal.parse(input.value).normalized;status.textContent='';timer=setTimeout(render,80);const value=input.value;discoveryTimer=setTimeout(()=>discoverSearch(value,status,()=>{if(input.value===value&&document.activeElement===input&&active<0)render();if(input.id==='exploreSearch')renderExplore();}),900);});
     input.addEventListener('focus',()=>{if(input.value.trim())render();});
     input.addEventListener('keydown',event=>{
       if(event.key==='Escape'){close();return;}
@@ -1692,6 +1710,8 @@ if (page === "admin") {
   ========================================================== */
 
   function heroSearch() {
+    const searchInput=document.getElementById('heroSearch');
+    discoverSearch(searchInput.value,document.getElementById('heroSearch-status'));
     const input =
       document.getElementById(
         "heroSearch"
@@ -2052,14 +2072,18 @@ if (page === "admin") {
       const visual=container.querySelector('.deal-visual'), mark=visual.querySelector('.deal-visual-mark');
       mark.hidden=true;image.onerror=()=>{image.remove();mark.hidden=false;};visual.appendChild(image);
     }
+    const provenance=document.createElement('p');provenance.className='offer-provenance';provenance.textContent=(deal.affiliateOverride?t("Lien affilié"):t("Lien non affilié"))+(deal.affiliateNetwork?' · '+deal.affiliateNetwork:'')+(deal.lastCheckedAt?' · '+t("Actualisé le")+' '+new Date(deal.lastCheckedAt).toLocaleString(state.lang):'');container.append(provenance);
     const offers=commerce.equivalents(deal,ALL_MARKET_DEALS,market.country);
     const comparison=document.createElement('section');comparison.className='merchant-offers state-box';
     const heading=document.createElement('h3');heading.textContent=t("Même produit, même variante");comparison.append(heading);
     if(new Set(offers.map(o=>o.merchantId)).size<2){comparison.append(t("Aucune seconde offre marchande vérifiée pour cette variante."));}
-    else offers.forEach(offer=>{
-      const row=document.createElement('div');row.className='merchant-offer';
-      const text=document.createElement('span');text.textContent=offer.store+' · '+money(offer.price,offer.currency)+' · '+t("Livraison à confirmer chez le marchand.");
-      const button=document.createElement('button');button.type='button';button.className='btn ghost small';button.textContent=t("Voir l'offre");button.addEventListener('click',()=>goToMerchant(offer));row.append(text,button);comparison.append(row);
+    else commerce.compare(deal,offers,market.country,market.currency||deal.currency,exchange).rows.forEach(result=>{
+      const offer=result.offer,row=document.createElement('div');row.className='merchant-offer';
+      const text=document.createElement('span');
+      text.textContent=offer.store+' · '+money(offer.price,offer.currency)+' · '+(result.shipping===null?t("Livraison à confirmer chez le marchand."):t("Livraison")+' '+nativeMoney(result.shipping,market.currency||deal.currency))+' · '+(result.total===null?t("Coût total inconnu"):t("Total")+' '+(result.estimated?'≈ ':'')+nativeMoney(result.total,market.currency||deal.currency))+' · '+(offer.affiliateOverride?t("Lien affilié"):t("Lien non affilié"));
+      const button=document.createElement('button');button.type='button';button.className='btn ghost small';button.textContent=t("Voir l'offre");button.addEventListener('click',()=>goToMerchant(offer));
+      const details=document.createElement('button');details.type='button';details.className='btn ghost small';details.textContent=t("Historique des prix");details.addEventListener('click',()=>openDeal(offer.id));
+      row.append(text,button,details);comparison.append(row);
     });container.append(comparison);
     const history = document.createElement('div'); history.className='state-box'; history.textContent=t("Chargement de l’historique…"); container.appendChild(history);
     api.history(deal.id).then(rows=> {
@@ -2129,6 +2153,8 @@ if (page === "admin") {
       const source = ['home','explore','deal','compare','favorites','intelligence'].includes(page) ? page : 'deal';
       const url = window.DealBotBackend.safeUrl(await api.track(deal.id,session,source));
       if (!url) throw new Error('Invalid destination');
+      const ticket=searchTickets.get(lastSearchKey);
+      if(ticket && typeof api.demandClick==='function')await Promise.race([api.demandClick(ticket,deal.id).catch(()=>{}),new Promise(resolve=>setTimeout(resolve,500))]);
       window.location.assign(url);
     } catch (error) { showToast(t("Impossible d’ouvrir le marchand. Réessayez.")); }
   }
@@ -3521,6 +3547,18 @@ async function renderAdmin() {
     return;
   }
   renderAdminMessages();
+  if(typeof api.demandAdmin==='function') {
+    let demandPanel=document.getElementById('adminDemand');
+    if(!demandPanel){demandPanel=document.createElement('section');demandPanel.id='adminDemand';demandPanel.className='state-box';document.querySelector('#page-admin .container').append(demandPanel);}
+    demandPanel.textContent=t("Chargement des recherches…");
+    api.demandAdmin().then(result=>{
+      if(revision!==authRevision)return;demandPanel.replaceChildren();
+      const title=document.createElement('h3');title.textContent=t("Demande du catalogue");demandPanel.append(title);
+      (result.sources||[]).forEach(source=>{const line=document.createElement('p');line.textContent=source.network+' · '+source.program+' · '+source.mode+' · '+(source.last_consumed_at?new Date(source.last_consumed_at).toLocaleString(state.lang):'—');demandPanel.append(line);});
+      if(!result.queries.length)demandPanel.append(t("Aucune recherche agrégée pour le moment."));
+      result.queries.forEach(q=>{const row=document.createElement('p');row.textContent=q.query+' · '+(q.country||'—')+' · '+q.searches+' '+t("recherches")+' · '+q.result_count+' '+t("résultats")+' · '+q.clicked_searches+' '+t("recherches avec clic");demandPanel.append(row);});
+    }).catch(()=>{demandPanel.textContent=t("Données de recherche indisponibles.");});
+  }
   document.getElementById(
     "adminStatDeals"
   ).textContent =

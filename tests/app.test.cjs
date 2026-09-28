@@ -28,6 +28,7 @@ async function setup({catalogDeals=null,storedLang=null,user=null,role='user',em
   if(storedLang)w.localStorage.setItem('dealbot_language_v2',storedLang);
   w.eval(fs.readFileSync('i18n.js','utf8'));
   w.eval(fs.readFileSync('commerce.js','utf8'));
+  w.eval(fs.readFileSync('search.js','utf8'));
   w.eval(script); await delay();
   return {dom,w,calls,errors,authListener,api,client};
 }
@@ -552,4 +553,15 @@ test('Intelligence uses real photos and honest insufficient history state',async
 });
 test('Intelligence history supports keyboard range navigation with original currency',async()=>{
  const {dom,w,api}=await setup();api.history=async()=>[{price:100,currency:'MUR',recorded_at:'2026-09-01'},{price:90,currency:'MUR',recorded_at:'2026-09-02'}];w.location.hash='#intelligence';await delay();await delay();const slider=w.document.querySelector('.intel-history input');assert.ok(slider);slider.value='0';slider.dispatchEvent(new w.Event('input'));assert.match(w.document.querySelector('.intel-history output').textContent,/100/);dom.window.close();
+});
+test('universal search extends local results through the real index interface without blocking suggestions',async()=>{
+ const {dom,w,api}=await setup({catalogDeals:[{...deal,name:'Portable monitor'}]});let searches=0,demands=0;
+ api.search=async()=>{searches++;return {offers:[{...deal,id:99,name:'Monitor HDMI',published:true}]}};
+ api.demand=async()=>{demands++;return {ticket:'00000000-0000-4000-8000-000000000001'}};
+ const input=w.document.getElementById('heroSearch');input.focus();input.value='écran';input.dispatchEvent(new w.Event('input'));await delay();await new Promise(r=>setTimeout(r,100));
+ assert.match(w.document.getElementById('heroSearch-results').textContent,/Portable monitor/);assert.equal(searches,0);
+ await new Promise(r=>setTimeout(r,1000));assert.equal(searches,1);assert.equal(demands,1);assert.match(w.document.getElementById('heroSearch-results').textContent,/Monitor HDMI/);dom.window.close();
+});
+test('external index failure preserves instant local results',async()=>{
+ const {dom,w,api}=await setup({catalogDeals:[{...deal,name:'Portable monitor'}]});api.search=async()=>{throw Error('unavailable')};const input=w.document.getElementById('heroSearch');input.focus();input.value='monitor';input.dispatchEvent(new w.Event('input'));await new Promise(r=>setTimeout(r,1050));assert.match(w.document.getElementById('heroSearch-results').textContent,/Portable monitor/);assert.match(w.document.getElementById('heroSearch-status').textContent,/locaux/);dom.window.close();
 });
